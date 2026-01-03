@@ -1,0 +1,48 @@
+# Binaries
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+
+# Go
+*.test
+*.out
+coverage.txt
+vendor/
+
+# Prisma (generated client)
+/prisma/db/
+
+# Logs
+*.log
+logs/
+
+# Temp / Build
+/tmp/
+/dist/
+/build/
+
+# Air (hot reload)
+/tmp/
+
+# Test
+coverage.html
