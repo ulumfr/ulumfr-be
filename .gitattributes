@@ -1,2 +1,0 @@
-prisma/db/*_gen.go filter=lfs diff=lfs merge=lfs -text
-prisma/db/*_gen.go !text !filter !merge !diff
