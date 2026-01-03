@@ -2,17 +2,21 @@
 
 Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, **Prisma**, dan **Cloudflare R2**.
 
+**🌐 Live:** [https://api.ulumfr.my.id](https://api.ulumfr.my.id)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Go 1.21+
 - Neon PostgreSQL database
+- Git LFS (untuk clone)
 
 ### Setup
 
 1. **Clone repository**
    ```bash
+   git lfs install
    git clone https://github.com/ulumfr/ulumfr-be.git
    cd ulumfr-be
    ```
@@ -28,22 +32,17 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
    go mod download
    ```
 
-4. **Generate Prisma client**
-   ```bash
-   go run github.com/steebchen/prisma-client-go generate
-   ```
-
-5. **Push schema ke database**
+4. **Push schema ke database**
    ```bash
    go run github.com/steebchen/prisma-client-go db push
    ```
 
-6. **Run server**
+5. **Run server**
    ```bash
    go run ./cmd/api
    ```
 
-7. **Open Swagger docs**
+6. **Open Swagger docs**
    ```
    http://localhost:8080/swagger/index.html
    ```
@@ -63,7 +62,7 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 │   ├── repository/     # Database operations
 │   ├── service/        # Business logic
 │   └── storage/        # Cloudflare R2 client
-├── prisma/             # Prisma schema
+├── prisma/             # Prisma schema & generated client
 └── Makefile            # Build commands
 ```
 
@@ -77,7 +76,7 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 | POST | `/api/v1/auth/login` | Login → get JWT tokens |
 | POST | `/api/v1/auth/refresh` | Refresh access token |
 | GET | `/api/v1/auth/me` | Get current user |
-| POST | `/api/v1/auth/logout` | Logout (invalidate session) |
+| POST | `/api/v1/auth/logout` | Logout current session |
 | POST | `/api/v1/auth/logout-all` | Logout from all devices |
 
 ### Public
@@ -107,7 +106,7 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 | CRUD | `/api/v1/admin/contacts` | Contact management |
 | POST | `/api/v1/admin/upload-url` | Get presigned upload URL |
 
-📖 **Full API docs:** [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+📖 **Swagger docs:** [https://api.ulumfr.my.id/swagger/index.html](https://api.ulumfr.my.id/swagger/index.html)
 
 ## 🔐 Authentication
 
@@ -132,40 +131,58 @@ Presigned URL flow:
 3. Frontend upload langsung ke R2
 4. Simpan file URL ke database
 
+## 🚀 Deployment
+
+### Vercel (Production)
+
+Project sudah dikonfigurasi untuk Vercel:
+- `api/index.go` - Serverless handler
+- `vercel.json` - Configuration
+- Git LFS untuk file Prisma yang besar
+
+### Local Development
+
+```bash
+# Run dengan hot reload
+make dev
+
+# Atau manual
+go run ./cmd/api
+```
+
+## 🛠 Environment Variables
+
+```env
+# Database (gunakan pooled connection dari Neon)
+DATABASE_URL=postgres://user:pass@ep-xxx-pooler.region.aws.neon.tech/db?sslmode=require
+
+# Server
+PORT=8080
+APP_ENV=development
+ALLOWED_ORIGINS=http://localhost:3000
+
+# JWT
+JWT_SECRET=your-secret-key-minimum-32-characters
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=168h
+
+# Cloudflare R2 (optional)
+R2_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret_key
+R2_BUCKET_NAME=your_bucket
+R2_PUBLIC_URL=https://your-r2-domain.com
+```
+
 ## 📝 Make Commands
 
 ```bash
 make help        # Show all commands
 make build       # Build binary
 make run         # Build & run
-make dev         # Run with hot reload (requires air)
+make dev         # Run with hot reload
 make generate    # Generate Prisma client
 make migrate     # Push schema to database
-make test        # Run tests
-make build-prod  # Production build (Linux)
-```
-
-## 🛠 Environment Variables
-
-```env
-# Database
-DATABASE_URL=postgres://user:pass@host/db?sslmode=require
-
-# Server
-PORT=8080
-APP_ENV=development
-
-# JWT
-JWT_SECRET=your-secret-key-min-32-chars
-JWT_ACCESS_EXPIRY=15m
-JWT_REFRESH_EXPIRY=168h
-
-# Cloudflare R2
-R2_ACCOUNT_ID=your_account_id
-R2_ACCESS_KEY_ID=your_access_key
-R2_SECRET_ACCESS_KEY=your_secret_key
-R2_BUCKET_NAME=your_bucket
-R2_PUBLIC_URL=https://your-r2-domain.com
 ```
 
 ## 📄 License

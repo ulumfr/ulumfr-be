@@ -990,9 +990,9 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "api.ulumfr.my.id",
 	BasePath:         "/",
-	Schemes:          []string{"http", "https"},
+	Schemes:          []string{"https"},
 	Title:            "UlumFR Portfolio API",
 	Description:      "Backend API for Portfolio CMS with JWT Authentication",
 	InfoInstanceName: "swagger",
