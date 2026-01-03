@@ -29,8 +29,7 @@ Thumbs.db
 coverage.txt
 vendor/
 
-# Prisma (generated client)
-/prisma/db/
+# Note: prisma/db/ is NOT ignored because Vercel needs the generated client
 
 # Logs
 *.log
