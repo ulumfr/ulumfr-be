@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/internal/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/domain"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 

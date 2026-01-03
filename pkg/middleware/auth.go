@@ -8,9 +8,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/internal/config"
-	"github.com/ulumfr/ulumfr-be/internal/domain"
-	"github.com/ulumfr/ulumfr-be/internal/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/config"
+	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/repository"
 )
 
 const (

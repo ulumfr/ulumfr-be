@@ -5,8 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/internal/domain"
-	"github.com/ulumfr/ulumfr-be/internal/storage"
+	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
 // UploadService handles file upload operations

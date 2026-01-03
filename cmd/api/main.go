@@ -15,12 +15,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/internal/config"
-	"github.com/ulumfr/ulumfr-be/internal/handler"
-	"github.com/ulumfr/ulumfr-be/internal/middleware"
-	"github.com/ulumfr/ulumfr-be/internal/repository"
-	"github.com/ulumfr/ulumfr-be/internal/service"
-	"github.com/ulumfr/ulumfr-be/internal/storage"
+	"github.com/ulumfr/ulumfr-be/pkg/config"
+	"github.com/ulumfr/ulumfr-be/pkg/handler"
+	"github.com/ulumfr/ulumfr-be/pkg/middleware"
+	"github.com/ulumfr/ulumfr-be/pkg/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/service"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 
 	_ "github.com/ulumfr/ulumfr-be/docs" // swagger docs

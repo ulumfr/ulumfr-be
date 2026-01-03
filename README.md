@@ -52,9 +52,10 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 
 ```
 .
-├── cmd/api/            # Entry point
+├── api/                # Vercel serverless handler
+├── cmd/api/            # Local development entry point
 ├── docs/               # Swagger documentation
-├── internal/
+├── pkg/
 │   ├── config/         # Configuration loader
 │   ├── domain/         # Domain entities & DTOs
 │   ├── handler/        # HTTP handlers

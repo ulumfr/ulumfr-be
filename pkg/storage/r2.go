@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/rs/zerolog/log"
 
-	appConfig "github.com/ulumfr/ulumfr-be/internal/config"
+	appConfig "github.com/ulumfr/ulumfr-be/pkg/config"
 )
 
 // R2Client handles Cloudflare R2 operations

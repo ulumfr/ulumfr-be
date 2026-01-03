@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/ulumfr/ulumfr-be/internal/config"
-	"github.com/ulumfr/ulumfr-be/internal/domain"
-	"github.com/ulumfr/ulumfr-be/internal/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/config"
+	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/repository"
 )
 
 var (
