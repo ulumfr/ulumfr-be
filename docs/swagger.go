@@ -38,7 +38,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/register": {
+        "/v1/auth/register": {
             "post": {
                 "description": "Register a new user account",
                 "consumes": ["application/json"],
@@ -59,7 +59,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/login": {
+        "/v1/auth/login": {
             "post": {
                 "description": "Login with email and password",
                 "consumes": ["application/json"],
@@ -79,7 +79,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/refresh": {
+        "/v1/auth/refresh": {
             "post": {
                 "description": "Refresh access token using refresh token",
                 "consumes": ["application/json"],
@@ -99,7 +99,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/me": {
+        "/v1/auth/me": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get current authenticated user info",
@@ -112,7 +112,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/logout": {
+        "/v1/auth/logout": {
             "post": {
                 "security": [{"Bearer": []}],
                 "description": "Logout from current session (invalidates refresh token)",
@@ -125,7 +125,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/logout-all": {
+        "/v1/auth/logout-all": {
             "post": {
                 "security": [{"Bearer": []}],
                 "description": "Logout from all devices (invalidates all refresh tokens)",
@@ -138,7 +138,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/projects": {
+        "/v1/public/projects": {
             "get": {
                 "description": "Get list of published projects",
                 "produces": ["application/json"],
@@ -156,7 +156,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/projects/{slug}": {
+        "/v1/public/projects/{slug}": {
             "get": {
                 "description": "Get project details by slug",
                 "produces": ["application/json"],
@@ -169,7 +169,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/categories": {
+        "/v1/public/categories": {
             "get": {
                 "description": "Get all categories",
                 "produces": ["application/json"],
@@ -180,7 +180,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/tags": {
+        "/v1/public/tags": {
             "get": {
                 "description": "Get all tags",
                 "produces": ["application/json"],
@@ -191,7 +191,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/careers": {
+        "/v1/public/careers": {
             "get": {
                 "description": "Get career/work experience list",
                 "produces": ["application/json"],
@@ -202,7 +202,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/educations": {
+        "/v1/public/educations": {
             "get": {
                 "description": "Get education history",
                 "produces": ["application/json"],
@@ -213,7 +213,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/resume": {
+        "/v1/public/resume": {
             "get": {
                 "description": "Get active resume/CV",
                 "produces": ["application/json"],
@@ -225,7 +225,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/public/contact": {
+        "/v1/public/contact": {
             "post": {
                 "description": "Submit contact form (rate limited)",
                 "consumes": ["application/json"],
@@ -245,7 +245,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/projects": {
+        "/v1/admin/projects": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all projects (including unpublished)",
@@ -276,7 +276,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/projects/{id}": {
+        "/v1/admin/projects/{id}": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get project by ID",
@@ -312,7 +312,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Project deleted"}}
             }
         },
-        "/api/v1/admin/categories": {
+        "/v1/admin/categories": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all categories",
@@ -334,7 +334,7 @@ const docTemplate = `{
                 "responses": {"201": {"description": "Category created"}}
             }
         },
-        "/api/v1/admin/categories/{id}": {
+        "/v1/admin/categories/{id}": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Update a category",
@@ -358,7 +358,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Category deleted"}}
             }
         },
-        "/api/v1/admin/tags": {
+        "/v1/admin/tags": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all tags",
@@ -380,7 +380,7 @@ const docTemplate = `{
                 "responses": {"201": {"description": "Tag created"}}
             }
         },
-        "/api/v1/admin/tags/{id}": {
+        "/v1/admin/tags/{id}": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Update a tag",
@@ -404,7 +404,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Tag deleted"}}
             }
         },
-        "/api/v1/admin/careers": {
+        "/v1/admin/careers": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all careers",
@@ -426,7 +426,7 @@ const docTemplate = `{
                 "responses": {"201": {"description": "Career created"}}
             }
         },
-        "/api/v1/admin/careers/{id}": {
+        "/v1/admin/careers/{id}": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Update a career entry",
@@ -450,7 +450,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Career deleted"}}
             }
         },
-        "/api/v1/admin/educations": {
+        "/v1/admin/educations": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all educations",
@@ -472,7 +472,7 @@ const docTemplate = `{
                 "responses": {"201": {"description": "Education created"}}
             }
         },
-        "/api/v1/admin/educations/{id}": {
+        "/v1/admin/educations/{id}": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Update an education entry",
@@ -496,7 +496,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Education deleted"}}
             }
         },
-        "/api/v1/admin/resumes": {
+        "/v1/admin/resumes": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all resumes",
@@ -518,7 +518,7 @@ const docTemplate = `{
                 "responses": {"201": {"description": "Resume created"}}
             }
         },
-        "/api/v1/admin/resumes/{id}": {
+        "/v1/admin/resumes/{id}": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Update a resume",
@@ -542,7 +542,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Resume deleted"}}
             }
         },
-        "/api/v1/admin/resumes/{id}/activate": {
+        "/v1/admin/resumes/{id}/activate": {
             "post": {
                 "security": [{"Bearer": []}],
                 "description": "Set a resume as active (deactivates others)",
@@ -553,7 +553,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Resume activated"}}
             }
         },
-        "/api/v1/admin/contacts": {
+        "/v1/admin/contacts": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get all contact submissions",
@@ -570,7 +570,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/contacts/{id}": {
+        "/v1/admin/contacts/{id}": {
             "get": {
                 "security": [{"Bearer": []}],
                 "description": "Get contact by ID",
@@ -593,7 +593,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Contact deleted"}}
             }
         },
-        "/api/v1/admin/contacts/{id}/read": {
+        "/v1/admin/contacts/{id}/read": {
             "put": {
                 "security": [{"Bearer": []}],
                 "description": "Mark contact as read",
@@ -604,7 +604,7 @@ const docTemplate = `{
                 "responses": {"200": {"description": "Contact marked as read"}}
             }
         },
-        "/api/v1/admin/upload-url": {
+        "/v1/admin/upload-url": {
             "post": {
                 "security": [{"Bearer": []}],
                 "description": "Get presigned URL for file upload to R2",

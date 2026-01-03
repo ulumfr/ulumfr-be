@@ -72,39 +72,39 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/auth/register` | Register new user |
-| POST | `/api/v1/auth/login` | Login → get JWT tokens |
-| POST | `/api/v1/auth/refresh` | Refresh access token |
-| GET | `/api/v1/auth/me` | Get current user |
-| POST | `/api/v1/auth/logout` | Logout current session |
-| POST | `/api/v1/auth/logout-all` | Logout from all devices |
+| POST | `/v1/auth/register` | Register new user |
+| POST | `/v1/auth/login` | Login → get JWT tokens |
+| POST | `/v1/auth/refresh` | Refresh access token |
+| GET | `/v1/auth/me` | Get current user |
+| POST | `/v1/auth/logout` | Logout current session |
+| POST | `/v1/auth/logout-all` | Logout from all devices |
 
 ### Public
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/health` | Health check |
-| GET | `/api/v1/public/projects` | List published projects |
-| GET | `/api/v1/public/projects/:slug` | Get project by slug |
-| GET | `/api/v1/public/categories` | List categories |
-| GET | `/api/v1/public/tags` | List tags |
-| GET | `/api/v1/public/careers` | List careers |
-| GET | `/api/v1/public/educations` | List educations |
-| GET | `/api/v1/public/resume` | Get active resume |
-| POST | `/api/v1/public/contact` | Submit contact form |
+| GET | `/v1/public/projects` | List published projects |
+| GET | `/v1/public/projects/:slug` | Get project by slug |
+| GET | `/v1/public/categories` | List categories |
+| GET | `/v1/public/tags` | List tags |
+| GET | `/v1/public/careers` | List careers |
+| GET | `/v1/public/educations` | List educations |
+| GET | `/v1/public/resume` | Get active resume |
+| POST | `/v1/public/contact` | Submit contact form |
 
 ### Admin (Protected - JWT + Admin Role)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| CRUD | `/api/v1/admin/projects` | Project management |
-| CRUD | `/api/v1/admin/categories` | Category management |
-| CRUD | `/api/v1/admin/tags` | Tag management |
-| CRUD | `/api/v1/admin/careers` | Career management |
-| CRUD | `/api/v1/admin/educations` | Education management |
-| CRUD | `/api/v1/admin/resumes` | Resume management |
-| CRUD | `/api/v1/admin/contacts` | Contact management |
-| POST | `/api/v1/admin/upload-url` | Get presigned upload URL |
+| CRUD | `/v1/admin/projects` | Project management |
+| CRUD | `/v1/admin/categories` | Category management |
+| CRUD | `/v1/admin/tags` | Tag management |
+| CRUD | `/v1/admin/careers` | Career management |
+| CRUD | `/v1/admin/educations` | Education management |
+| CRUD | `/v1/admin/resumes` | Resume management |
+| CRUD | `/v1/admin/contacts` | Contact management |
+| POST | `/v1/admin/upload-url` | Get presigned upload URL |
 
 📖 **Swagger docs:** [https://api.ulumfr.my.id/swagger/index.html](https://api.ulumfr.my.id/swagger/index.html)
 
@@ -126,7 +126,7 @@ UPDATE users SET role = 'ADMIN' WHERE email = 'your@email.com';
 ## 📤 File Upload (R2)
 
 Presigned URL flow:
-1. Admin request: `POST /api/v1/admin/upload-url`
+1. Admin request: `POST /v1/admin/upload-url`
 2. Backend generate presigned PUT URL
 3. Frontend upload langsung ke R2
 4. Simpan file URL ke database

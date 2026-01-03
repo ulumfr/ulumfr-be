@@ -130,7 +130,7 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// API v1 group
-	api := app.Group("/api/v1")
+	api := app.Group("/v1")
 
 	// ===========================================
 	// Auth routes (no authentication required)
