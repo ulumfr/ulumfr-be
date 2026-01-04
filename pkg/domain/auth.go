@@ -32,6 +32,11 @@ type RefreshTokenInput struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
+// LogoutInput is the input for logout
+type LogoutInput struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
 // JWTClaims represents the claims stored in JWT
 type JWTClaims struct {
 	UserID string `json:"user_id"`

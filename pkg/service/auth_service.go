@@ -132,13 +132,25 @@ func (s *AuthService) Logout(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
 	}
 
-	// Get session token from context (set by middleware)
-	sessionToken, ok := c.Locals("session_token").(string)
-	if ok && sessionToken != "" {
-		// Delete this specific session
-		if err := s.sessionRepo.Delete(c.Context(), sessionToken); err != nil {
-			log.Warn().Err(err).Msg("Failed to delete session")
-		}
+	var input domain.LogoutInput
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+	}
+
+	if err := s.validate.Struct(input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("refresh_token is required"))
+	}
+
+	// Verify the refresh token belongs to this user
+	session, err := s.sessionRepo.FindByToken(c.Context(), input.RefreshToken)
+	if err != nil || session.UserID != user.ID {
+		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid refresh token"))
+	}
+
+	// Delete the session
+	if err := s.sessionRepo.Delete(c.Context(), input.RefreshToken); err != nil {
+		log.Error().Err(err).Msg("Failed to delete session")
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to logout"))
 	}
 
 	log.Info().Str("user_id", user.ID).Msg("User logged out successfully")

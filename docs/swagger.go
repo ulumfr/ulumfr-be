@@ -115,12 +115,21 @@ const docTemplate = `{
         "/v1/auth/logout": {
             "post": {
                 "security": [{"Bearer": []}],
-                "description": "Logout from current session (invalidates refresh token)",
+                "description": "Logout from current session by deleting the refresh token from database",
+                "consumes": ["application/json"],
                 "produces": ["application/json"],
                 "tags": ["Auth"],
                 "summary": "Logout",
+                "parameters": [{
+                    "description": "Logout request with refresh token",
+                    "name": "body",
+                    "in": "body",
+                    "required": true,
+                    "schema": {"$ref": "#/definitions/LogoutInput"}
+                }],
                 "responses": {
                     "200": {"description": "Logout successful"},
+                    "400": {"description": "Invalid refresh token"},
                     "401": {"description": "Unauthorized"}
                 }
             }
@@ -642,6 +651,13 @@ const docTemplate = `{
             "required": ["refresh_token"],
             "properties": {
                 "refresh_token": {"type": "string"}
+            }
+        },
+        "LogoutInput": {
+            "type": "object",
+            "required": ["refresh_token"],
+            "properties": {
+                "refresh_token": {"type": "string", "description": "The refresh token to invalidate"}
             }
         },
         "TokenResponse": {
