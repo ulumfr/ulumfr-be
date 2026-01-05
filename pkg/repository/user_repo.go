@@ -40,12 +40,62 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 	return mapUserToDomain(user), nil
 }
 
+func (r *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
+	users, err := r.client.User.FindMany().
+		OrderBy(db.User.CreatedAt.Order(db.DESC)).
+		Exec(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]domain.User, len(users))
+	for i, u := range users {
+		result[i] = *mapUserToDomain(&u)
+	}
+
+	return result, nil
+}
+
 func (r *userRepository) Create(ctx context.Context, name, email, password string) (*domain.User, error) {
 	user, err := r.client.User.CreateOne(
 		db.User.Email.Set(email),
 		db.User.Name.Set(name),
 		db.User.Password.Set(password),
 	).Exec(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return mapUserToDomain(user), nil
+}
+
+func (r *userRepository) Update(ctx context.Context, id string, input domain.UpdateProfileInput) (*domain.User, error) {
+	updates := []db.UserSetParam{}
+
+	if input.Name != nil {
+		updates = append(updates, db.User.Name.Set(*input.Name))
+	}
+	if input.Email != nil {
+		updates = append(updates, db.User.Email.Set(*input.Email))
+	}
+	if input.NewPassword != nil {
+		// Password should be hashed before calling this function
+		updates = append(updates, db.User.Password.Set(*input.NewPassword))
+	}
+	if input.Image != nil {
+		updates = append(updates, db.User.Image.Set(*input.Image))
+	}
+
+	if len(updates) == 0 {
+		// No updates to make, return the current user
+		return r.FindByID(ctx, id)
+	}
+
+	user, err := r.client.User.FindUnique(
+		db.User.ID.Equals(id),
+	).Update(updates...).Exec(ctx)
 
 	if err != nil {
 		return nil, err

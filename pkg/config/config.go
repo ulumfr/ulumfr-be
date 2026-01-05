@@ -75,7 +75,7 @@ func Load() (*Config, error) {
 
 		// JWT
 		JWTSecret:        getEnv("JWT_SECRET", "your-super-secret-key-change-in-production"),
-		JWTAccessExpiry:  getEnvAsDuration("JWT_ACCESS_EXPIRY", 15*time.Minute),
+		JWTAccessExpiry:  getEnvAsDuration("JWT_ACCESS_EXPIRY", 1*time.Hour),
 		JWTRefreshExpiry: getEnvAsDuration("JWT_REFRESH_EXPIRY", 7*24*time.Hour),
 	}
 

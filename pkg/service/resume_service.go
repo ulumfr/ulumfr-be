@@ -7,18 +7,21 @@ import (
 
 	"github.com/ulumfr/ulumfr-be/pkg/domain"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
 // ResumeService handles resume business logic
 type ResumeService struct {
 	repo     repository.ResumeRepository
+	r2Client *storage.R2Client
 	validate *validator.Validate
 }
 
 // NewResumeService creates a new resume service
-func NewResumeService(repo repository.ResumeRepository) *ResumeService {
+func NewResumeService(repo repository.ResumeRepository, r2Client *storage.R2Client) *ResumeService {
 	return &ResumeService{
 		repo:     repo,
+		r2Client: r2Client,
 		validate: validator.New(),
 	}
 }
@@ -90,11 +93,30 @@ func (s *ResumeService) Update(c *fiber.Ctx) error {
 	return c.JSON(domain.SuccessResponse(resume, "Resume updated successfully"))
 }
 
-// Delete deletes a resume entry
+// Delete deletes a resume entry and its associated R2 file
 func (s *ResumeService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+	}
+
+	// Fetch the resume first to get the file URL
+	resume, err := s.repo.FindByID(c.Context(), id)
+	if err != nil {
+		log.Error().Err(err).Str("id", id).Msg("Resume not found")
+		return c.Status(fiber.StatusNotFound).JSON(domain.ErrorResponse("Resume not found"))
+	}
+
+	// Delete the file from R2 if r2Client is configured and file URL exists
+	if s.r2Client != nil && s.r2Client.IsConfigured() && resume.FileURL != "" {
+		key := storage.ExtractKeyFromURL(resume.FileURL)
+		if key != "" {
+			if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+				log.Warn().Err(err).Str("key", key).Msg("Failed to delete file from R2, continuing with database deletion")
+			} else {
+				log.Info().Str("key", key).Msg("File deleted from R2")
+			}
+		}
 	}
 
 	if err := s.repo.Delete(c.Context(), id); err != nil {

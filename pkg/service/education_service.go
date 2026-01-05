@@ -7,18 +7,21 @@ import (
 
 	"github.com/ulumfr/ulumfr-be/pkg/domain"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
 // EducationService handles education business logic
 type EducationService struct {
 	repo     repository.EducationRepository
+	r2Client *storage.R2Client
 	validate *validator.Validate
 }
 
 // NewEducationService creates a new education service
-func NewEducationService(repo repository.EducationRepository) *EducationService {
+func NewEducationService(repo repository.EducationRepository, r2Client *storage.R2Client) *EducationService {
 	return &EducationService{
 		repo:     repo,
+		r2Client: r2Client,
 		validate: validator.New(),
 	}
 }
@@ -75,6 +78,19 @@ func (s *EducationService) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
 	}
 
+	// If updating logoUrl, delete old logo from R2
+	if input.LogoURL != nil && s.r2Client != nil && s.r2Client.IsConfigured() {
+		existingEducation, err := s.repo.FindByID(c.Context(), id)
+		if err == nil && existingEducation.LogoURL != nil && *existingEducation.LogoURL != *input.LogoURL {
+			key := storage.ExtractKeyFromURL(*existingEducation.LogoURL)
+			if key != "" {
+				if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+					log.Warn().Err(err).Str("key", key).Msg("Failed to delete old logo from R2")
+				}
+			}
+		}
+	}
+
 	education, err := s.repo.Update(c.Context(), id, input)
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to update education")
@@ -84,11 +100,28 @@ func (s *EducationService) Update(c *fiber.Ctx) error {
 	return c.JSON(domain.SuccessResponse(education, "Education updated successfully"))
 }
 
-// Delete deletes an education entry
+// Delete deletes an education entry and its logo from R2
 func (s *EducationService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+	}
+
+	// Fetch education to get logoUrl for R2 cleanup
+	education, err := s.repo.FindByID(c.Context(), id)
+	if err != nil {
+		log.Error().Err(err).Str("id", id).Msg("Education not found")
+		return c.Status(fiber.StatusNotFound).JSON(domain.ErrorResponse("Education not found"))
+	}
+
+	// Delete logo from R2 if exists
+	if s.r2Client != nil && s.r2Client.IsConfigured() && education.LogoURL != nil {
+		key := storage.ExtractKeyFromURL(*education.LogoURL)
+		if key != "" {
+			if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+				log.Warn().Err(err).Str("key", key).Msg("Failed to delete logo from R2")
+			}
+		}
 	}
 
 	if err := s.repo.Delete(c.Context(), id); err != nil {

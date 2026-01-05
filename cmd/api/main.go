@@ -157,6 +157,7 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 		auth.Get("/me", authMiddleware.RequireAuth(), services.Auth.Me)
 		auth.Post("/logout", authMiddleware.RequireAuth(), services.Auth.Logout)
 		auth.Post("/logout-all", authMiddleware.RequireAuth(), services.Auth.LogoutAll)
+		auth.Put("/profile", authMiddleware.RequireAuth(), services.Auth.UpdateProfile)
 	}
 
 	// ===========================================
@@ -246,6 +247,9 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 
 		// File Upload
 		admin.Post("/upload-url", services.Upload.GetPresignedURL)
+
+		// Users
+		admin.Get("/users", services.Auth.ListUsers)
 	}
 }
 

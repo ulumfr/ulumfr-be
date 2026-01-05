@@ -7,18 +7,21 @@ import (
 
 	"github.com/ulumfr/ulumfr-be/pkg/domain"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
 // ProjectService handles project business logic
 type ProjectService struct {
 	repo     repository.ProjectRepository
+	r2Client *storage.R2Client
 	validate *validator.Validate
 }
 
 // NewProjectService creates a new project service
-func NewProjectService(repo repository.ProjectRepository) *ProjectService {
+func NewProjectService(repo repository.ProjectRepository, r2Client *storage.R2Client) *ProjectService {
 	return &ProjectService{
 		repo:     repo,
+		r2Client: r2Client,
 		validate: validator.New(),
 	}
 }
@@ -138,6 +141,19 @@ func (s *ProjectService) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
 	}
 
+	// If updating thumbnailUrl, delete old thumbnail from R2
+	if input.ThumbnailURL != nil && s.r2Client != nil && s.r2Client.IsConfigured() {
+		existingProject, err := s.repo.FindByID(c.Context(), id)
+		if err == nil && existingProject.ThumbnailURL != nil && *existingProject.ThumbnailURL != *input.ThumbnailURL {
+			key := storage.ExtractKeyFromURL(*existingProject.ThumbnailURL)
+			if key != "" {
+				if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+					log.Warn().Err(err).Str("key", key).Msg("Failed to delete old thumbnail from R2")
+				}
+			}
+		}
+	}
+
 	project, err := s.repo.Update(c.Context(), id, input)
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to update project")
@@ -147,11 +163,40 @@ func (s *ProjectService) Update(c *fiber.Ctx) error {
 	return c.JSON(domain.SuccessResponse(project, "Project updated successfully"))
 }
 
-// Delete deletes a project
+// Delete deletes a project and its images from R2
 func (s *ProjectService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+	}
+
+	// Fetch project for R2 cleanup
+	project, err := s.repo.FindByID(c.Context(), id)
+	if err != nil {
+		log.Error().Err(err).Str("id", id).Msg("Project not found")
+		return c.Status(fiber.StatusNotFound).JSON(domain.ErrorResponse("Project not found"))
+	}
+
+	// Delete thumbnail and all images from R2
+	if s.r2Client != nil && s.r2Client.IsConfigured() {
+		// Delete thumbnail
+		if project.ThumbnailURL != nil {
+			key := storage.ExtractKeyFromURL(*project.ThumbnailURL)
+			if key != "" {
+				if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+					log.Warn().Err(err).Str("key", key).Msg("Failed to delete thumbnail from R2")
+				}
+			}
+		}
+		// Delete project images
+		for _, img := range project.Images {
+			key := storage.ExtractKeyFromURL(img.URL)
+			if key != "" {
+				if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+					log.Warn().Err(err).Str("key", key).Msg("Failed to delete project image from R2")
+				}
+			}
+		}
 	}
 
 	if err := s.repo.Delete(c.Context(), id); err != nil {

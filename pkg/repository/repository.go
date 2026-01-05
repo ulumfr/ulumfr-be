@@ -40,7 +40,9 @@ func NewRepositories(client *db.PrismaClient) *Repositories {
 type UserRepository interface {
 	FindByID(ctx context.Context, id string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
+	FindAll(ctx context.Context) ([]domain.User, error)
 	Create(ctx context.Context, name, email, password string) (*domain.User, error)
+	Update(ctx context.Context, id string, input domain.UpdateProfileInput) (*domain.User, error)
 }
 
 // SessionRepository defines session data access methods

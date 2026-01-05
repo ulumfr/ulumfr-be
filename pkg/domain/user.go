@@ -32,3 +32,12 @@ func (s *Session) IsExpired() bool {
 func (u *User) IsAdmin() bool {
 	return u.Role == "ADMIN"
 }
+
+// UpdateProfileInput is the input for updating user profile
+type UpdateProfileInput struct {
+	Name            *string `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
+	Email           *string `json:"email,omitempty" validate:"omitempty,email"`
+	CurrentPassword *string `json:"current_password,omitempty"`
+	NewPassword     *string `json:"new_password,omitempty" validate:"omitempty,min=6,max=100"`
+	Image           *string `json:"image,omitempty"`
+}

@@ -27,13 +27,17 @@ func (r *tagRepository) FindAll(ctx context.Context) ([]domain.Tag, error) {
 
 	result := make([]domain.Tag, len(tags))
 	for i, t := range tags {
-		result[i] = domain.Tag{
+		tag := domain.Tag{
 			ID:        t.ID,
 			Name:      t.Name,
 			Slug:      t.Slug,
 			CreatedAt: t.CreatedAt,
 			UpdatedAt: t.UpdatedAt,
 		}
+		if iconUrl, ok := t.IconURL(); ok {
+			tag.IconUrl = &iconUrl
+		}
+		result[i] = tag
 	}
 
 	return result, nil
@@ -48,32 +52,43 @@ func (r *tagRepository) FindByID(ctx context.Context, id string) (*domain.Tag, e
 		return nil, err
 	}
 
-	return &domain.Tag{
+	result := &domain.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
 		CreatedAt: tag.CreatedAt,
 		UpdatedAt: tag.UpdatedAt,
-	}, nil
+	}
+	if iconUrl, ok := tag.IconURL(); ok {
+		result.IconUrl = &iconUrl
+	}
+
+	return result, nil
 }
 
 func (r *tagRepository) Create(ctx context.Context, input domain.CreateTagInput) (*domain.Tag, error) {
 	tag, err := r.client.Tag.CreateOne(
 		db.Tag.Name.Set(input.Name),
 		db.Tag.Slug.Set(input.Slug),
+		db.Tag.IconURL.SetIfPresent(input.IconUrl),
 	).Exec(ctx)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &domain.Tag{
+	result := &domain.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
 		CreatedAt: tag.CreatedAt,
 		UpdatedAt: tag.UpdatedAt,
-	}, nil
+	}
+	if iconUrl, ok := tag.IconURL(); ok {
+		result.IconUrl = &iconUrl
+	}
+
+	return result, nil
 }
 
 func (r *tagRepository) Update(ctx context.Context, id string, input domain.UpdateTagInput) (*domain.Tag, error) {
@@ -85,6 +100,9 @@ func (r *tagRepository) Update(ctx context.Context, id string, input domain.Upda
 	if input.Slug != nil {
 		updates = append(updates, db.Tag.Slug.Set(*input.Slug))
 	}
+	if input.IconUrl != nil {
+		updates = append(updates, db.Tag.IconURL.Set(*input.IconUrl))
+	}
 
 	tag, err := r.client.Tag.FindUnique(
 		db.Tag.ID.Equals(id),
@@ -94,13 +112,18 @@ func (r *tagRepository) Update(ctx context.Context, id string, input domain.Upda
 		return nil, err
 	}
 
-	return &domain.Tag{
+	result := &domain.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
 		CreatedAt: tag.CreatedAt,
 		UpdatedAt: tag.UpdatedAt,
-	}, nil
+	}
+	if iconUrl, ok := tag.IconURL(); ok {
+		result.IconUrl = &iconUrl
+	}
+
+	return result, nil
 }
 
 func (r *tagRepository) Delete(ctx context.Context, id string) error {

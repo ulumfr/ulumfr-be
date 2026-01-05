@@ -19,8 +19,8 @@ type Project struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 
 	// Relations
-	Categories []Category `json:"categories,omitempty"`
-	Tags       []Tag      `json:"tags,omitempty"`
+	Categories []Category     `json:"categories,omitempty"`
+	Tags       []Tag          `json:"tags,omitempty"`
 	Images     []ProjectImage `json:"images,omitempty"`
 }
 
@@ -49,6 +49,7 @@ type Tag struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Slug      string    `json:"slug"`
+	IconUrl   *string   `json:"icon_url,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -101,22 +102,24 @@ type UpdateCategoryInput struct {
 
 // CreateTagInput is the input for creating a tag
 type CreateTagInput struct {
-	Name string `json:"name" validate:"required,min=1,max=50"`
-	Slug string `json:"slug" validate:"required,min=1,max=50"`
+	Name    string  `json:"name" validate:"required,min=1,max=50"`
+	Slug    string  `json:"slug" validate:"required,min=1,max=50"`
+	IconUrl *string `json:"icon_url" validate:"omitempty,url"`
 }
 
 // UpdateTagInput is the input for updating a tag
 type UpdateTagInput struct {
-	Name *string `json:"name" validate:"omitempty,min=1,max=50"`
-	Slug *string `json:"slug" validate:"omitempty,min=1,max=50"`
+	Name    *string `json:"name" validate:"omitempty,min=1,max=50"`
+	Slug    *string `json:"slug" validate:"omitempty,min=1,max=50"`
+	IconUrl *string `json:"icon_url" validate:"omitempty,url"`
 }
 
 // ProjectListParams contains parameters for listing projects
 type ProjectListParams struct {
-	Page        int    `query:"page"`
-	Limit       int    `query:"limit"`
-	CategoryID  string `query:"category_id"`
-	TagID       string `query:"tag_id"`
-	IsFeatured  *bool  `query:"is_featured"`
-	Search      string `query:"search"`
+	Page       int    `query:"page"`
+	Limit      int    `query:"limit"`
+	CategoryID string `query:"category_id"`
+	TagID      string `query:"tag_id"`
+	IsFeatured *bool  `query:"is_featured"`
+	Search     string `query:"search"`
 }

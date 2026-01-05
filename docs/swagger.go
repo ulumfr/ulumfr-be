@@ -147,6 +147,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/auth/profile": {
+            "put": {
+                "security": [{"Bearer": []}],
+                "description": "Update current user profile (name, email, password, photo)",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Auth"],
+                "summary": "Update user profile",
+                "parameters": [{
+                    "description": "Profile update data",
+                    "name": "body",
+                    "in": "body",
+                    "required": true,
+                    "schema": {"$ref": "#/definitions/UpdateProfileInput"}
+                }],
+                "responses": {
+                    "200": {"description": "Profile updated successfully", "schema": {"$ref": "#/definitions/User"}},
+                    "400": {"description": "Invalid input or current password incorrect"},
+                    "401": {"description": "Unauthorized"},
+                    "409": {"description": "Email already in use"}
+                }
+            }
+        },
         "/v1/public/projects": {
             "get": {
                 "description": "Get list of published projects",
@@ -626,6 +649,20 @@ const docTemplate = `{
                     "200": {"description": "Presigned URL", "schema": {"$ref": "#/definitions/PresignedURLResponse"}}
                 }
             }
+        },
+        "/v1/admin/users": {
+            "get": {
+                "security": [{"Bearer": []}],
+                "description": "Get all registered users (admin only)",
+                "produces": ["application/json"],
+                "tags": ["Admin - Users"],
+                "summary": "List all users",
+                "responses": {
+                    "200": {"description": "List of users", "schema": {"type": "array", "items": {"$ref": "#/definitions/User"}}},
+                    "401": {"description": "Unauthorized"},
+                    "403": {"description": "Forbidden - Admin only"}
+                }
+            }
         }
     },
     "definitions": {
@@ -660,13 +697,23 @@ const docTemplate = `{
                 "refresh_token": {"type": "string", "description": "The refresh token to invalidate"}
             }
         },
+        "UpdateProfileInput": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "New name (2-100 characters)"},
+                "email": {"type": "string", "format": "email", "description": "New email address"},
+                "current_password": {"type": "string", "description": "Current password (required when changing password)"},
+                "new_password": {"type": "string", "description": "New password (6-100 characters)"},
+                "image": {"type": "string", "description": "Profile image URL"}
+            }
+        },
         "TokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {"type": "string"},
                 "refresh_token": {"type": "string"},
                 "token_type": {"type": "string", "example": "Bearer"},
-                "expires_in": {"type": "integer", "example": 900}
+                "expires_in": {"type": "integer", "example": 3600}
             }
         },
         "User": {
@@ -785,6 +832,7 @@ const docTemplate = `{
                 "id": {"type": "string"},
                 "name": {"type": "string"},
                 "slug": {"type": "string"},
+                "icon_url": {"type": "string", "description": "URL to tech stack icon (e.g., devicons)"},
                 "created_at": {"type": "string", "format": "date-time"}
             }
         },
@@ -793,14 +841,16 @@ const docTemplate = `{
             "required": ["name", "slug"],
             "properties": {
                 "name": {"type": "string"},
-                "slug": {"type": "string"}
+                "slug": {"type": "string"},
+                "icon_url": {"type": "string"}
             }
         },
         "UpdateTagInput": {
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "slug": {"type": "string"}
+                "slug": {"type": "string"},
+                "icon_url": {"type": "string"}
             }
         },
         "Career": {

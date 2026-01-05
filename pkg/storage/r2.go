@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -131,4 +132,25 @@ func (r *R2Client) DeleteObject(ctx context.Context, key string) error {
 // IsConfigured checks if R2 client is properly configured
 func (r *R2Client) IsConfigured() bool {
 	return r != nil && r.client != nil
+}
+
+// ExtractKeyFromURL extracts the R2 object key from a public URL
+// Example: https://pub-xxx.r2.dev/resumes/1234567890-file.pdf -> resumes/1234567890-file.pdf
+func ExtractKeyFromURL(fileURL string) string {
+	if fileURL == "" {
+		return ""
+	}
+	// Find the path after the domain
+	// URL format: https://public-url/folder/timestamp-filename
+	parts := strings.SplitN(fileURL, "://", 2)
+	if len(parts) != 2 {
+		return ""
+	}
+
+	pathParts := strings.SplitN(parts[1], "/", 2)
+	if len(pathParts) != 2 {
+		return ""
+	}
+
+	return pathParts[1]
 }

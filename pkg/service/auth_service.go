@@ -15,6 +15,7 @@ import (
 	"github.com/ulumfr/ulumfr-be/pkg/config"
 	"github.com/ulumfr/ulumfr-be/pkg/domain"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
+	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
 var (
@@ -27,15 +28,17 @@ var (
 type AuthService struct {
 	userRepo    repository.UserRepository
 	sessionRepo repository.SessionRepository
+	r2Client    *storage.R2Client
 	cfg         *config.Config
 	validate    *validator.Validate
 }
 
 // NewAuthService creates a new auth service
-func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, cfg *config.Config) *AuthService {
+func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.SessionRepository, r2Client *storage.R2Client, cfg *config.Config) *AuthService {
 	return &AuthService{
 		userRepo:    userRepo,
 		sessionRepo: sessionRepo,
+		r2Client:    r2Client,
 		cfg:         cfg,
 		validate:    validator.New(),
 	}
@@ -230,6 +233,105 @@ func (s *AuthService) Me(c *fiber.Ctx) error {
 	user.Password = nil
 
 	return c.JSON(domain.SuccessResponse(user, ""))
+}
+
+// UpdateProfile updates the current user's profile
+func (s *AuthService) UpdateProfile(c *fiber.Ctx) error {
+	user, ok := c.Locals("user").(*domain.User)
+	if !ok || user == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
+	}
+
+	var input domain.UpdateProfileInput
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+	}
+
+	if err := s.validate.Struct(input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+	}
+
+	// If changing password, verify current password
+	if input.NewPassword != nil {
+		if input.CurrentPassword == nil {
+			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Current password is required to change password"))
+		}
+
+		// Get user with password from database
+		dbUser, err := s.userRepo.FindByID(c.Context(), user.ID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch user"))
+		}
+
+		if dbUser.Password == nil || *dbUser.Password == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Cannot change password for OAuth users"))
+		}
+
+		// Verify current password
+		if err := bcrypt.CompareHashAndPassword([]byte(*dbUser.Password), []byte(*input.CurrentPassword)); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Current password is incorrect"))
+		}
+
+		// Hash new password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*input.NewPassword), bcrypt.DefaultCost)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to hash new password")
+			return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update password"))
+		}
+		hashedPasswordStr := string(hashedPassword)
+		input.NewPassword = &hashedPasswordStr
+	}
+
+	// If changing email, check if new email already exists
+	if input.Email != nil && *input.Email != user.Email {
+		existingUser, _ := s.userRepo.FindByEmail(c.Context(), *input.Email)
+		if existingUser != nil {
+			return c.Status(fiber.StatusConflict).JSON(domain.ErrorResponse("Email already in use"))
+		}
+	}
+
+	// If changing image, delete old image from R2
+	if input.Image != nil && s.r2Client != nil && s.r2Client.IsConfigured() {
+		dbUser, err := s.userRepo.FindByID(c.Context(), user.ID)
+		if err == nil && dbUser.Image != nil && *dbUser.Image != *input.Image {
+			key := storage.ExtractKeyFromURL(*dbUser.Image)
+			if key != "" {
+				if err := s.r2Client.DeleteObject(c.Context(), key); err != nil {
+					log.Warn().Err(err).Str("key", key).Msg("Failed to delete old profile image from R2")
+				}
+			}
+		}
+	}
+
+	// Update user profile
+	updatedUser, err := s.userRepo.Update(c.Context(), user.ID, input)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to update user profile")
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update profile"))
+	}
+
+	// Remove password from response
+	updatedUser.Password = nil
+
+	log.Info().Str("user_id", user.ID).Msg("User profile updated successfully")
+
+	return c.JSON(domain.SuccessResponse(updatedUser, "Profile updated successfully"))
+}
+
+// ListUsers returns all users (admin endpoint)
+func (s *AuthService) ListUsers(c *fiber.Ctx) error {
+	users, err := s.userRepo.FindAll(c.Context())
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch users")
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch users"))
+	}
+
+	// Remove passwords from response
+	for i := range users {
+		users[i].Password = nil
+	}
+
+	return c.JSON(domain.SuccessResponse(users, ""))
 }
 
 // generateTokensWithSession generates tokens and stores refresh token in sessions table
