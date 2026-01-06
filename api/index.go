@@ -110,6 +110,7 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 	auth.Get("/me", authMiddleware.RequireAuth(), services.Auth.Me)
 	auth.Post("/logout", authMiddleware.RequireAuth(), services.Auth.Logout)
 	auth.Post("/logout-all", authMiddleware.RequireAuth(), services.Auth.LogoutAll)
+	auth.Put("/profile", authMiddleware.RequireAuth(), services.Auth.UpdateProfile)
 
 	// Public routes
 	public := api.Group("/public")
@@ -170,6 +171,8 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 	admin.Delete("/contacts/:id", services.Contact.Delete)
 	// Upload
 	admin.Post("/upload-url", services.Upload.GetPresignedURL)
+	// Users
+	admin.Get("/users", services.Auth.ListUsers)
 }
 
 func joinOrigins(origins []string) string {
