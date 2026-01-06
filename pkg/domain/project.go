@@ -104,14 +104,14 @@ type UpdateCategoryInput struct {
 type CreateTagInput struct {
 	Name    string  `json:"name" validate:"required,min=1,max=50"`
 	Slug    string  `json:"slug" validate:"required,min=1,max=50"`
-	IconUrl *string `json:"icon_url" validate:"omitempty,url"`
+	IconUrl *string `json:"icon_url" validate:"omitempty,min=1,max=100"`
 }
 
 // UpdateTagInput is the input for updating a tag
 type UpdateTagInput struct {
 	Name    *string `json:"name" validate:"omitempty,min=1,max=50"`
 	Slug    *string `json:"slug" validate:"omitempty,min=1,max=50"`
-	IconUrl *string `json:"icon_url" validate:"omitempty,url"`
+	IconUrl *string `json:"icon_url" validate:"omitempty,min=1,max=100"`
 }
 
 // ProjectListParams contains parameters for listing projects
