@@ -1,6 +1,6 @@
 # UlumFR Backend API
 
-Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, **Prisma**, dan **Cloudflare R2**.
+Backend untuk ulumfr.my.id menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, **Prisma**, dan **Cloudflare R2**.
 
 **🌐 Live:** [https://api.ulumfr.my.id](https://api.ulumfr.my.id)
 
@@ -56,7 +56,7 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 ├── docs/               # Swagger documentation
 ├── pkg/
 │   ├── config/         # Configuration loader
-│   ├── domain/         # Domain entities & DTOs
+│   ├── models/         # Domain entities & DTOs
 │   ├── handler/        # HTTP handlers
 │   ├── middleware/     # JWT Auth, CORS, Rate limiting
 │   ├── repository/     # Database operations
@@ -91,6 +91,10 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 | GET | `/v1/public/careers` | List careers |
 | GET | `/v1/public/educations` | List educations |
 | GET | `/v1/public/resume` | Get active resume |
+| GET | `/v1/public/about` | Get active profile |
+| GET | `/v1/public/blogs` | List published blogs |
+| GET | `/v1/public/blogs/:slug` | Get blog by slug |
+| GET | `/v1/public/certificates` | List certificates |
 | POST | `/v1/public/contact` | Submit contact form |
 
 ### Admin (Protected - JWT + Admin Role)
@@ -104,6 +108,10 @@ Backend untuk portofolio/CMS menggunakan **Go (Fiber)**, **Neon (PostgreSQL)**, 
 | CRUD | `/v1/admin/educations` | Education management |
 | CRUD | `/v1/admin/resumes` | Resume management |
 | CRUD | `/v1/admin/contacts` | Contact management |
+| CRUD | `/v1/admin/about` | About/Profile management |
+| CRUD | `/v1/admin/blogs` | Blog management |
+| CRUD | `/v1/admin/certificates` | Certificate management |
+| GET | `/v1/admin/users` | List all users |
 | POST | `/v1/admin/upload-url` | Get presigned upload URL |
 
 📖 **Swagger docs:** [https://api.ulumfr.my.id/swagger/index.html](https://api.ulumfr.my.id/swagger/index.html)
