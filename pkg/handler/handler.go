@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -33,5 +33,5 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		message = "Resource not found"
 	}
 
-	return c.Status(code).JSON(domain.ErrorResponse(message))
+	return c.Status(code).JSON(models.ErrorResponse(message))
 }

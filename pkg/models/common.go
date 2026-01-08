@@ -1,4 +1,4 @@
-package domain
+package models
 
 // PaginatedResponse is a generic paginated response wrapper
 type PaginatedResponse[T any] struct {

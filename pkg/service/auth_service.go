@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ulumfr/ulumfr-be/pkg/config"
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
 	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
@@ -46,167 +46,167 @@ func NewAuthService(userRepo repository.UserRepository, sessionRepo repository.S
 
 // Register handles user registration
 func (s *AuthService) Register(c *fiber.Ctx) error {
-	var input domain.RegisterInput
+	var input models.RegisterInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// Check if user already exists
 	existingUser, _ := s.userRepo.FindByEmail(c.Context(), input.Email)
 	if existingUser != nil {
-		return c.Status(fiber.StatusConflict).JSON(domain.ErrorResponse("User with this email already exists"))
+		return c.Status(fiber.StatusConflict).JSON(models.ErrorResponse("User with this email already exists"))
 	}
 
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to hash password")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to register user"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to register user"))
 	}
 
 	// Create user
 	user, err := s.userRepo.Create(c.Context(), input.Name, input.Email, string(hashedPassword))
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create user")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to register user"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to register user"))
 	}
 
 	// Generate tokens and create session
 	tokens, err := s.generateTokensWithSession(c, user)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate tokens")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to register user"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to register user"))
 	}
 
 	log.Info().Str("email", input.Email).Msg("User registered successfully")
 
-	return c.Status(fiber.StatusCreated).JSON(domain.SuccessResponse(tokens, "Registration successful"))
+	return c.Status(fiber.StatusCreated).JSON(models.SuccessResponse(tokens, "Registration successful"))
 }
 
 // Login handles user login
 func (s *AuthService) Login(c *fiber.Ctx) error {
-	var input domain.LoginInput
+	var input models.LoginInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// Find user by email
 	user, err := s.userRepo.FindByEmail(c.Context(), input.Email)
 	if err != nil {
 		log.Debug().Str("email", input.Email).Msg("User not found")
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid email or password"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid email or password"))
 	}
 
 	// Check if user has password (local auth)
 	if user.Password == nil || *user.Password == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid email or password"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid email or password"))
 	}
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(input.Password)); err != nil {
 		log.Debug().Str("email", input.Email).Msg("Invalid password")
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid email or password"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid email or password"))
 	}
 
 	// Generate tokens and create session
 	tokens, err := s.generateTokensWithSession(c, user)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate tokens")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to login"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to login"))
 	}
 
 	log.Info().Str("email", input.Email).Msg("User logged in successfully")
 
-	return c.JSON(domain.SuccessResponse(tokens, "Login successful"))
+	return c.JSON(models.SuccessResponse(tokens, "Login successful"))
 }
 
 // Logout handles user logout
 func (s *AuthService) Logout(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
+	user, ok := c.Locals("user").(*models.User)
 	if !ok || user == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Not authenticated"))
 	}
 
-	var input domain.LogoutInput
+	var input models.LogoutInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("refresh_token is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("refresh_token is required"))
 	}
 
 	// Verify the refresh token belongs to this user
 	session, err := s.sessionRepo.FindByToken(c.Context(), input.RefreshToken)
 	if err != nil || session.UserID != user.ID {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid refresh token"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid refresh token"))
 	}
 
 	// Delete the session
 	if err := s.sessionRepo.Delete(c.Context(), input.RefreshToken); err != nil {
 		log.Error().Err(err).Msg("Failed to delete session")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to logout"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to logout"))
 	}
 
 	log.Info().Str("user_id", user.ID).Msg("User logged out successfully")
 
-	return c.JSON(domain.SuccessResponse(nil, "Logout successful"))
+	return c.JSON(models.SuccessResponse(nil, "Logout successful"))
 }
 
 // LogoutAll handles logging out from all devices
 func (s *AuthService) LogoutAll(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
+	user, ok := c.Locals("user").(*models.User)
 	if !ok || user == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Not authenticated"))
 	}
 
 	// Delete all sessions for this user
 	if err := s.sessionRepo.DeleteByUserID(c.Context(), user.ID); err != nil {
 		log.Error().Err(err).Msg("Failed to delete all sessions")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to logout from all devices"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to logout from all devices"))
 	}
 
 	log.Info().Str("user_id", user.ID).Msg("User logged out from all devices")
 
-	return c.JSON(domain.SuccessResponse(nil, "Logged out from all devices"))
+	return c.JSON(models.SuccessResponse(nil, "Logged out from all devices"))
 }
 
 // RefreshToken handles token refresh
 func (s *AuthService) RefreshToken(c *fiber.Ctx) error {
-	var input domain.RefreshTokenInput
+	var input models.RefreshTokenInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// Check if refresh token exists in session table
 	session, err := s.sessionRepo.FindByToken(c.Context(), input.RefreshToken)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid or expired refresh token"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid or expired refresh token"))
 	}
 
 	// Check if session is expired
 	if session.IsExpired() {
 		// Delete expired session
 		_ = s.sessionRepo.Delete(c.Context(), input.RefreshToken)
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Refresh token expired"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Refresh token expired"))
 	}
 
 	// Get user from database
 	user, err := s.userRepo.FindByID(c.Context(), session.UserID)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("User not found"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("User not found"))
 	}
 
 	// Delete old session
@@ -216,67 +216,67 @@ func (s *AuthService) RefreshToken(c *fiber.Ctx) error {
 	tokens, err := s.generateTokensWithSession(c, user)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate tokens")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to refresh token"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to refresh token"))
 	}
 
-	return c.JSON(domain.SuccessResponse(tokens, "Token refreshed successfully"))
+	return c.JSON(models.SuccessResponse(tokens, "Token refreshed successfully"))
 }
 
 // Me returns the current authenticated user
 func (s *AuthService) Me(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
+	user, ok := c.Locals("user").(*models.User)
 	if !ok || user == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Not authenticated"))
 	}
 
 	// Remove password from response
 	user.Password = nil
 
-	return c.JSON(domain.SuccessResponse(user, ""))
+	return c.JSON(models.SuccessResponse(user, ""))
 }
 
 // UpdateProfile updates the current user's profile
 func (s *AuthService) UpdateProfile(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
+	user, ok := c.Locals("user").(*models.User)
 	if !ok || user == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Not authenticated"))
+		return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Not authenticated"))
 	}
 
-	var input domain.UpdateProfileInput
+	var input models.UpdateProfileInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// If changing password, verify current password
 	if input.NewPassword != nil {
 		if input.CurrentPassword == nil {
-			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Current password is required to change password"))
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Current password is required to change password"))
 		}
 
 		// Get user with password from database
 		dbUser, err := s.userRepo.FindByID(c.Context(), user.ID)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch user"))
+			return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to fetch user"))
 		}
 
 		if dbUser.Password == nil || *dbUser.Password == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Cannot change password for OAuth users"))
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Cannot change password for OAuth users"))
 		}
 
 		// Verify current password
 		if err := bcrypt.CompareHashAndPassword([]byte(*dbUser.Password), []byte(*input.CurrentPassword)); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Current password is incorrect"))
+			return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Current password is incorrect"))
 		}
 
 		// Hash new password
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*input.NewPassword), bcrypt.DefaultCost)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to hash new password")
-			return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update password"))
+			return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to update password"))
 		}
 		hashedPasswordStr := string(hashedPassword)
 		input.NewPassword = &hashedPasswordStr
@@ -286,7 +286,7 @@ func (s *AuthService) UpdateProfile(c *fiber.Ctx) error {
 	if input.Email != nil && *input.Email != user.Email {
 		existingUser, _ := s.userRepo.FindByEmail(c.Context(), *input.Email)
 		if existingUser != nil {
-			return c.Status(fiber.StatusConflict).JSON(domain.ErrorResponse("Email already in use"))
+			return c.Status(fiber.StatusConflict).JSON(models.ErrorResponse("Email already in use"))
 		}
 	}
 
@@ -307,7 +307,7 @@ func (s *AuthService) UpdateProfile(c *fiber.Ctx) error {
 	updatedUser, err := s.userRepo.Update(c.Context(), user.ID, input)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update user profile")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update profile"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to update profile"))
 	}
 
 	// Remove password from response
@@ -315,7 +315,7 @@ func (s *AuthService) UpdateProfile(c *fiber.Ctx) error {
 
 	log.Info().Str("user_id", user.ID).Msg("User profile updated successfully")
 
-	return c.JSON(domain.SuccessResponse(updatedUser, "Profile updated successfully"))
+	return c.JSON(models.SuccessResponse(updatedUser, "Profile updated successfully"))
 }
 
 // ListUsers returns all users (admin endpoint)
@@ -323,7 +323,7 @@ func (s *AuthService) ListUsers(c *fiber.Ctx) error {
 	users, err := s.userRepo.FindAll(c.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch users")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch users"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to fetch users"))
 	}
 
 	// Remove passwords from response
@@ -331,13 +331,13 @@ func (s *AuthService) ListUsers(c *fiber.Ctx) error {
 		users[i].Password = nil
 	}
 
-	return c.JSON(domain.SuccessResponse(users, ""))
+	return c.JSON(models.SuccessResponse(users, ""))
 }
 
 // generateTokensWithSession generates tokens and stores refresh token in sessions table
-func (s *AuthService) generateTokensWithSession(c *fiber.Ctx, user *domain.User) (*domain.TokenResponse, error) {
+func (s *AuthService) generateTokensWithSession(c *fiber.Ctx, user *models.User) (*models.TokenResponse, error) {
 	// Create access token (JWT)
-	accessClaims := domain.NewJWTClaims(user.ID, user.Email, user.Role, s.cfg.JWTAccessExpiry)
+	accessClaims := models.NewJWTClaims(user.ID, user.Email, user.Role, s.cfg.JWTAccessExpiry)
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
 	accessTokenString, err := accessToken.SignedString([]byte(s.cfg.JWTSecret))
 	if err != nil {
@@ -354,7 +354,7 @@ func (s *AuthService) generateTokensWithSession(c *fiber.Ctx, user *domain.User)
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	return &domain.TokenResponse{
+	return &models.TokenResponse{
 		AccessToken:  accessTokenString,
 		RefreshToken: refreshToken,
 		TokenType:    "Bearer",
@@ -363,8 +363,8 @@ func (s *AuthService) generateTokensWithSession(c *fiber.Ctx, user *domain.User)
 }
 
 // validateToken validates a JWT token and returns its claims
-func (s *AuthService) validateToken(tokenString string) (*domain.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &domain.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (s *AuthService) validateToken(tokenString string) (*models.JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -375,7 +375,7 @@ func (s *AuthService) validateToken(tokenString string) (*domain.JWTClaims, erro
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*domain.JWTClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*models.JWTClaims); ok && token.Valid {
 		return claims, nil
 	}
 

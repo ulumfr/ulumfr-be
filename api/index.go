@@ -121,6 +121,10 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 	public.Get("/careers", services.Career.List)
 	public.Get("/educations", services.Education.List)
 	public.Get("/resume", services.Resume.GetActive)
+	public.Get("/about", services.About.GetActive)
+	public.Get("/blogs", services.Blog.List)
+	public.Get("/blogs/:slug", services.Blog.GetBySlug)
+	public.Get("/certificates", services.Certificate.List)
 	contactLimiter := limiter.New(limiter.Config{
 		Max:        5,
 		Expiration: time.Duration(cfg.RateLimitWindowSeconds) * time.Second,
@@ -173,6 +177,22 @@ func setupRoutes(app *fiber.App, services *service.Services, authMiddleware *mid
 	admin.Post("/upload-url", services.Upload.GetPresignedURL)
 	// Users
 	admin.Get("/users", services.Auth.ListUsers)
+	// About
+	admin.Get("/about", services.About.AdminList)
+	admin.Post("/about", services.About.Create)
+	admin.Put("/about/:id", services.About.Update)
+	admin.Delete("/about/:id", services.About.Delete)
+	// Blogs
+	admin.Get("/blogs", services.Blog.AdminList)
+	admin.Post("/blogs", services.Blog.Create)
+	admin.Get("/blogs/:id", services.Blog.GetByID)
+	admin.Put("/blogs/:id", services.Blog.Update)
+	admin.Delete("/blogs/:id", services.Blog.Delete)
+	// Certificates
+	admin.Get("/certificates", services.Certificate.AdminList)
+	admin.Post("/certificates", services.Certificate.Create)
+	admin.Put("/certificates/:id", services.Certificate.Update)
+	admin.Delete("/certificates/:id", services.Certificate.Delete)
 }
 
 func joinOrigins(origins []string) string {

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewProjectRepository(client *db.PrismaClient) ProjectRepository {
 	return &projectRepository{client: client}
 }
 
-func (r *projectRepository) FindAll(ctx context.Context, params domain.ProjectListParams, publishedOnly bool) ([]domain.Project, int64, error) {
+func (r *projectRepository) FindAll(ctx context.Context, params models.ProjectListParams, publishedOnly bool) ([]models.Project, int64, error) {
 	// Set defaults
 	if params.Page < 1 {
 		params.Page = 1
@@ -71,7 +71,7 @@ func (r *projectRepository) FindAll(ctx context.Context, params domain.ProjectLi
 		return nil, 0, err
 	}
 
-	result := make([]domain.Project, len(projects))
+	result := make([]models.Project, len(projects))
 	for i, p := range projects {
 		result[i] = *mapProjectToDomain(&p)
 	}
@@ -79,7 +79,7 @@ func (r *projectRepository) FindAll(ctx context.Context, params domain.ProjectLi
 	return result, total, nil
 }
 
-func (r *projectRepository) FindByID(ctx context.Context, id string) (*domain.Project, error) {
+func (r *projectRepository) FindByID(ctx context.Context, id string) (*models.Project, error) {
 	project, err := r.client.Project.FindUnique(
 		db.Project.ID.Equals(id),
 	).With(
@@ -95,7 +95,7 @@ func (r *projectRepository) FindByID(ctx context.Context, id string) (*domain.Pr
 	return mapProjectToDomain(project), nil
 }
 
-func (r *projectRepository) FindBySlug(ctx context.Context, slug string) (*domain.Project, error) {
+func (r *projectRepository) FindBySlug(ctx context.Context, slug string) (*models.Project, error) {
 	project, err := r.client.Project.FindUnique(
 		db.Project.Slug.Equals(slug),
 	).With(
@@ -111,7 +111,7 @@ func (r *projectRepository) FindBySlug(ctx context.Context, slug string) (*domai
 	return mapProjectToDomain(project), nil
 }
 
-func (r *projectRepository) Create(ctx context.Context, input domain.CreateProjectInput) (*domain.Project, error) {
+func (r *projectRepository) Create(ctx context.Context, input models.CreateProjectInput) (*models.Project, error) {
 	// Create project
 	project, err := r.client.Project.CreateOne(
 		db.Project.Title.Set(input.Title),
@@ -155,7 +155,7 @@ func (r *projectRepository) Create(ctx context.Context, input domain.CreateProje
 	return r.FindByID(ctx, project.ID)
 }
 
-func (r *projectRepository) Update(ctx context.Context, id string, input domain.UpdateProjectInput) (*domain.Project, error) {
+func (r *projectRepository) Update(ctx context.Context, id string, input models.UpdateProjectInput) (*models.Project, error) {
 	updates := []db.ProjectSetParam{}
 
 	if input.Title != nil {
@@ -252,8 +252,8 @@ func (r *projectRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func mapProjectToDomain(p *db.ProjectModel) *domain.Project {
-	project := &domain.Project{
+func mapProjectToDomain(p *db.ProjectModel) *models.Project {
+	project := &models.Project{
 		ID:          p.ID,
 		Title:       p.Title,
 		Slug:        p.Slug,
@@ -282,10 +282,10 @@ func mapProjectToDomain(p *db.ProjectModel) *domain.Project {
 
 	// Map categories
 	if cats := p.Categories(); cats != nil {
-		project.Categories = make([]domain.Category, len(cats))
+		project.Categories = make([]models.Category, len(cats))
 		for i, pc := range cats {
 			cat := pc.Category()
-			project.Categories[i] = domain.Category{
+			project.Categories[i] = models.Category{
 				ID:        cat.ID,
 				Name:      cat.Name,
 				Slug:      cat.Slug,
@@ -300,10 +300,10 @@ func mapProjectToDomain(p *db.ProjectModel) *domain.Project {
 
 	// Map tags
 	if tags := p.Tags(); tags != nil {
-		project.Tags = make([]domain.Tag, len(tags))
+		project.Tags = make([]models.Tag, len(tags))
 		for i, pt := range tags {
 			t := pt.Tag()
-			project.Tags[i] = domain.Tag{
+			project.Tags[i] = models.Tag{
 				ID:        t.ID,
 				Name:      t.Name,
 				Slug:      t.Slug,
@@ -315,9 +315,9 @@ func mapProjectToDomain(p *db.ProjectModel) *domain.Project {
 
 	// Map images
 	if imgs := p.Images(); imgs != nil {
-		project.Images = make([]domain.ProjectImage, len(imgs))
+		project.Images = make([]models.ProjectImage, len(imgs))
 		for i, img := range imgs {
-			project.Images[i] = domain.ProjectImage{
+			project.Images[i] = models.ProjectImage{
 				ID:        img.ID,
 				ProjectID: img.ProjectID,
 				URL:       img.URL,

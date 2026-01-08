@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
 )
 
@@ -25,19 +25,19 @@ func NewContactService(repo repository.ContactRepository) *ContactService {
 
 // Create creates a new contact submission (public endpoint with rate limiting)
 func (s *ContactService) Create(c *fiber.Ctx) error {
-	var input domain.CreateContactInput
+	var input models.CreateContactInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	contact, err := s.repo.Create(c.Context(), input)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create contact")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to submit contact form"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to submit contact form"))
 	}
 
 	log.Info().
@@ -45,25 +45,25 @@ func (s *ContactService) Create(c *fiber.Ctx) error {
 		Str("name", input.Name).
 		Msg("New contact form submission")
 
-	return c.Status(fiber.StatusCreated).JSON(domain.SuccessResponse(contact, "Thank you for your message! We'll get back to you soon."))
+	return c.Status(fiber.StatusCreated).JSON(models.SuccessResponse(contact, "Thank you for your message! We'll get back to you soon."))
 }
 
 // List returns all contacts (admin endpoint)
 func (s *ContactService) List(c *fiber.Ctx) error {
-	params := domain.ContactListParams{}
+	params := models.ContactListParams{}
 	if err := c.QueryParser(&params); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid query parameters"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid query parameters"))
 	}
 
 	contacts, total, err := s.repo.FindAll(c.Context(), params)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch contacts")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch contacts"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to fetch contacts"))
 	}
 
-	pagination := domain.NewPagination(params.Page, params.Limit, total)
+	pagination := models.NewPagination(params.Page, params.Limit, total)
 
-	return c.JSON(domain.PaginatedResponse[domain.Contact]{
+	return c.JSON(models.PaginatedResponse[models.Contact]{
 		Data:       contacts,
 		Pagination: pagination,
 	})
@@ -73,44 +73,44 @@ func (s *ContactService) List(c *fiber.Ctx) error {
 func (s *ContactService) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("ID is required"))
 	}
 
 	contact, err := s.repo.FindByID(c.Context(), id)
 	if err != nil {
 		log.Debug().Err(err).Str("id", id).Msg("Contact not found")
-		return c.Status(fiber.StatusNotFound).JSON(domain.ErrorResponse("Contact not found"))
+		return c.Status(fiber.StatusNotFound).JSON(models.ErrorResponse("Contact not found"))
 	}
 
-	return c.JSON(domain.SuccessResponse(contact, ""))
+	return c.JSON(models.SuccessResponse(contact, ""))
 }
 
 // MarkAsRead marks a contact as read
 func (s *ContactService) MarkAsRead(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("ID is required"))
 	}
 
 	if err := s.repo.MarkAsRead(c.Context(), id); err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to mark contact as read")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update contact"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to update contact"))
 	}
 
-	return c.JSON(domain.SuccessResponse(nil, "Contact marked as read"))
+	return c.JSON(models.SuccessResponse(nil, "Contact marked as read"))
 }
 
 // Delete deletes a contact
 func (s *ContactService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("ID is required"))
 	}
 
 	if err := s.repo.Delete(c.Context(), id); err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to delete contact")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to delete contact"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to delete contact"))
 	}
 
-	return c.JSON(domain.SuccessResponse(nil, "Contact deleted successfully"))
+	return c.JSON(models.SuccessResponse(nil, "Contact deleted successfully"))
 }

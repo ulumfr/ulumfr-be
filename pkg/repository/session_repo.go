@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -17,7 +17,7 @@ func NewSessionRepository(client *db.PrismaClient) SessionRepository {
 	return &sessionRepository{client: client}
 }
 
-func (r *sessionRepository) FindByToken(ctx context.Context, token string) (*domain.Session, error) {
+func (r *sessionRepository) FindByToken(ctx context.Context, token string) (*models.Session, error) {
 	session, err := r.client.Session.FindUnique(
 		db.Session.SessionToken.Equals(token),
 	).Exec(ctx)
@@ -26,7 +26,7 @@ func (r *sessionRepository) FindByToken(ctx context.Context, token string) (*dom
 		return nil, err
 	}
 
-	return &domain.Session{
+	return &models.Session{
 		ID:           session.ID,
 		SessionToken: session.SessionToken,
 		UserID:       session.UserID,
@@ -34,7 +34,7 @@ func (r *sessionRepository) FindByToken(ctx context.Context, token string) (*dom
 	}, nil
 }
 
-func (r *sessionRepository) Create(ctx context.Context, userID, token string, expires time.Time) (*domain.Session, error) {
+func (r *sessionRepository) Create(ctx context.Context, userID, token string, expires time.Time) (*models.Session, error) {
 	session, err := r.client.Session.CreateOne(
 		db.Session.SessionToken.Set(token),
 		db.Session.Expires.Set(expires),
@@ -45,7 +45,7 @@ func (r *sessionRepository) Create(ctx context.Context, userID, token string, ex
 		return nil, err
 	}
 
-	return &domain.Session{
+	return &models.Session{
 		ID:           session.ID,
 		SessionToken: session.SessionToken,
 		UserID:       session.UserID,

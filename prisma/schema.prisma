@@ -145,6 +145,7 @@ model Tag {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   projects ProjectTag[]
+  blogs    BlogTag[]
 
   @@map("tags")
 }
@@ -261,4 +262,85 @@ model SiteSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("site_settings")
+}
+
+// ===========================================
+// Content Tables - About Me
+// ===========================================
+
+model About {
+  id        String   @id @default(cuid())
+  fullName  String   @map("full_name")
+  nickname  String?
+  role      String   // e.g., "Full Stack Developer"
+  bio       String?  @db.Text
+  avatarUrl String?  @map("avatar_url")
+  coverUrl  String?  @map("cover_url")
+  location  String?
+  email     String?
+  phone     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("abouts")
+}
+
+// ===========================================
+// Content Tables - Blog
+// ===========================================
+
+model Blog {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  excerpt     String?   @db.Text
+  content     String?   @db.Text
+  coverImage  String?   @map("cover_image")
+  isPublished Boolean   @default(false) @map("is_published")
+  isFeatured  Boolean   @default(false) @map("is_featured")
+  publishedAt DateTime? @map("published_at")
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  tags BlogTag[]
+
+  @@index([isPublished])
+  @@index([slug])
+  @@map("blogs")
+}
+
+model BlogTag {
+  blogId     String   @map("blog_id")
+  tagId      String   @map("tag_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("blog_tags")
+}
+
+// ===========================================
+// Content Tables - Certificates
+// ===========================================
+
+model Certificate {
+  id            String    @id @default(cuid())
+  name          String
+  issuer        String
+  issueDate     DateTime  @map("issue_date")
+  expiryDate    DateTime? @map("expiry_date")
+  credentialId  String?   @map("credential_id")
+  credentialUrl String?   @map("credential_url")
+  imageUrl      String?   @map("image_url")
+  description   String?   @db.Text
+  sortOrder     Int       @default(0) @map("sort_order")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([issueDate])
+  @@map("certificates")
 }

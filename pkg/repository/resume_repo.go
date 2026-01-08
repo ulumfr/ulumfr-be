@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewResumeRepository(client *db.PrismaClient) ResumeRepository {
 	return &resumeRepository{client: client}
 }
 
-func (r *resumeRepository) FindAll(ctx context.Context) ([]domain.Resume, error) {
+func (r *resumeRepository) FindAll(ctx context.Context) ([]models.Resume, error) {
 	resumes, err := r.client.Resume.FindMany().
 		OrderBy(db.Resume.CreatedAt.Order(db.DESC)).
 		Exec(ctx)
@@ -25,7 +25,7 @@ func (r *resumeRepository) FindAll(ctx context.Context) ([]domain.Resume, error)
 		return nil, err
 	}
 
-	result := make([]domain.Resume, len(resumes))
+	result := make([]models.Resume, len(resumes))
 	for i, res := range resumes {
 		result[i] = *mapResumeToDomain(&res)
 	}
@@ -33,7 +33,7 @@ func (r *resumeRepository) FindAll(ctx context.Context) ([]domain.Resume, error)
 	return result, nil
 }
 
-func (r *resumeRepository) FindByID(ctx context.Context, id string) (*domain.Resume, error) {
+func (r *resumeRepository) FindByID(ctx context.Context, id string) (*models.Resume, error) {
 	resume, err := r.client.Resume.FindUnique(
 		db.Resume.ID.Equals(id),
 	).Exec(ctx)
@@ -45,7 +45,7 @@ func (r *resumeRepository) FindByID(ctx context.Context, id string) (*domain.Res
 	return mapResumeToDomain(resume), nil
 }
 
-func (r *resumeRepository) FindActive(ctx context.Context) (*domain.Resume, error) {
+func (r *resumeRepository) FindActive(ctx context.Context) (*models.Resume, error) {
 	resume, err := r.client.Resume.FindFirst(
 		db.Resume.IsActive.Equals(true),
 	).OrderBy(db.Resume.CreatedAt.Order(db.DESC)).Exec(ctx)
@@ -57,7 +57,7 @@ func (r *resumeRepository) FindActive(ctx context.Context) (*domain.Resume, erro
 	return mapResumeToDomain(resume), nil
 }
 
-func (r *resumeRepository) Create(ctx context.Context, input domain.CreateResumeInput) (*domain.Resume, error) {
+func (r *resumeRepository) Create(ctx context.Context, input models.CreateResumeInput) (*models.Resume, error) {
 	// If this resume is being set as active, deactivate all others
 	if input.IsActive {
 		_, err := r.client.Resume.FindMany(
@@ -85,7 +85,7 @@ func (r *resumeRepository) Create(ctx context.Context, input domain.CreateResume
 	return mapResumeToDomain(resume), nil
 }
 
-func (r *resumeRepository) Update(ctx context.Context, id string, input domain.UpdateResumeInput) (*domain.Resume, error) {
+func (r *resumeRepository) Update(ctx context.Context, id string, input models.UpdateResumeInput) (*models.Resume, error) {
 	updates := []db.ResumeSetParam{}
 
 	if input.FileURL != nil {
@@ -155,8 +155,8 @@ func (r *resumeRepository) SetActive(ctx context.Context, id string) error {
 	return err
 }
 
-func mapResumeToDomain(r *db.ResumeModel) *domain.Resume {
-	resume := &domain.Resume{
+func mapResumeToDomain(r *db.ResumeModel) *models.Resume {
+	resume := &models.Resume{
 		ID:        r.ID,
 		FileURL:   r.FileURL,
 		FileName:  r.FileName,

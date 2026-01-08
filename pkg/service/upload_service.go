@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
 
@@ -26,16 +26,16 @@ func NewUploadService(r2Client *storage.R2Client) *UploadService {
 // GetPresignedURL generates a presigned URL for file upload
 func (s *UploadService) GetPresignedURL(c *fiber.Ctx) error {
 	if s.r2Client == nil || !s.r2Client.IsConfigured() {
-		return c.Status(fiber.StatusServiceUnavailable).JSON(domain.ErrorResponse("File upload service is not configured"))
+		return c.Status(fiber.StatusServiceUnavailable).JSON(models.ErrorResponse("File upload service is not configured"))
 	}
 
 	var req storage.PresignedURLRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// Validate folder
@@ -53,14 +53,14 @@ func (s *UploadService) GetPresignedURL(c *fiber.Ctx) error {
 	}
 
 	if !allowedFolders[req.Folder] {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid folder specified"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid folder specified"))
 	}
 
 	// Generate presigned URL
 	resp, err := s.r2Client.GeneratePresignedPutURL(c.Context(), req)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to generate presigned URL")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to generate upload URL"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to generate upload URL"))
 	}
 
 	log.Info().
@@ -69,5 +69,5 @@ func (s *UploadService) GetPresignedURL(c *fiber.Ctx) error {
 		Str("content_type", req.ContentType).
 		Msg("Presigned URL generated")
 
-	return c.JSON(domain.SuccessResponse(resp, "Upload URL generated successfully"))
+	return c.JSON(models.SuccessResponse(resp, "Upload URL generated successfully"))
 }

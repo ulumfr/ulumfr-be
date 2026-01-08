@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewContactRepository(client *db.PrismaClient) ContactRepository {
 	return &contactRepository{client: client}
 }
 
-func (r *contactRepository) FindAll(ctx context.Context, params domain.ContactListParams) ([]domain.Contact, int64, error) {
+func (r *contactRepository) FindAll(ctx context.Context, params models.ContactListParams) ([]models.Contact, int64, error) {
 	// Set defaults
 	if params.Page < 1 {
 		params.Page = 1
@@ -55,7 +55,7 @@ func (r *contactRepository) FindAll(ctx context.Context, params domain.ContactLi
 		return nil, 0, err
 	}
 
-	result := make([]domain.Contact, len(contacts))
+	result := make([]models.Contact, len(contacts))
 	for i, c := range contacts {
 		result[i] = *mapContactToDomain(&c)
 	}
@@ -63,7 +63,7 @@ func (r *contactRepository) FindAll(ctx context.Context, params domain.ContactLi
 	return result, total, nil
 }
 
-func (r *contactRepository) FindByID(ctx context.Context, id string) (*domain.Contact, error) {
+func (r *contactRepository) FindByID(ctx context.Context, id string) (*models.Contact, error) {
 	contact, err := r.client.Contact.FindUnique(
 		db.Contact.ID.Equals(id),
 	).Exec(ctx)
@@ -75,7 +75,7 @@ func (r *contactRepository) FindByID(ctx context.Context, id string) (*domain.Co
 	return mapContactToDomain(contact), nil
 }
 
-func (r *contactRepository) Create(ctx context.Context, input domain.CreateContactInput) (*domain.Contact, error) {
+func (r *contactRepository) Create(ctx context.Context, input models.CreateContactInput) (*models.Contact, error) {
 	contact, err := r.client.Contact.CreateOne(
 		db.Contact.Name.Set(input.Name),
 		db.Contact.Email.Set(input.Email),
@@ -107,8 +107,8 @@ func (r *contactRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func mapContactToDomain(c *db.ContactModel) *domain.Contact {
-	contact := &domain.Contact{
+func mapContactToDomain(c *db.ContactModel) *models.Contact {
+	contact := &models.Contact{
 		ID:        c.ID,
 		Name:      c.Name,
 		Email:     c.Email,

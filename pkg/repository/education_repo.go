@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewEducationRepository(client *db.PrismaClient) EducationRepository {
 	return &educationRepository{client: client}
 }
 
-func (r *educationRepository) FindAll(ctx context.Context) ([]domain.Education, error) {
+func (r *educationRepository) FindAll(ctx context.Context) ([]models.Education, error) {
 	educations, err := r.client.Education.FindMany().
 		OrderBy(db.Education.SortOrder.Order(db.ASC), db.Education.StartDate.Order(db.DESC)).
 		Exec(ctx)
@@ -25,7 +25,7 @@ func (r *educationRepository) FindAll(ctx context.Context) ([]domain.Education, 
 		return nil, err
 	}
 
-	result := make([]domain.Education, len(educations))
+	result := make([]models.Education, len(educations))
 	for i, e := range educations {
 		result[i] = *mapEducationToDomain(&e)
 	}
@@ -33,7 +33,7 @@ func (r *educationRepository) FindAll(ctx context.Context) ([]domain.Education, 
 	return result, nil
 }
 
-func (r *educationRepository) FindByID(ctx context.Context, id string) (*domain.Education, error) {
+func (r *educationRepository) FindByID(ctx context.Context, id string) (*models.Education, error) {
 	education, err := r.client.Education.FindUnique(
 		db.Education.ID.Equals(id),
 	).Exec(ctx)
@@ -45,7 +45,7 @@ func (r *educationRepository) FindByID(ctx context.Context, id string) (*domain.
 	return mapEducationToDomain(education), nil
 }
 
-func (r *educationRepository) Create(ctx context.Context, input domain.CreateEducationInput) (*domain.Education, error) {
+func (r *educationRepository) Create(ctx context.Context, input models.CreateEducationInput) (*models.Education, error) {
 	education, err := r.client.Education.CreateOne(
 		db.Education.School.Set(input.School),
 		db.Education.Degree.Set(input.Degree),
@@ -67,7 +67,7 @@ func (r *educationRepository) Create(ctx context.Context, input domain.CreateEdu
 	return mapEducationToDomain(education), nil
 }
 
-func (r *educationRepository) Update(ctx context.Context, id string, input domain.UpdateEducationInput) (*domain.Education, error) {
+func (r *educationRepository) Update(ctx context.Context, id string, input models.UpdateEducationInput) (*models.Education, error) {
 	updates := []db.EducationSetParam{}
 
 	if input.School != nil {
@@ -122,8 +122,8 @@ func (r *educationRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func mapEducationToDomain(e *db.EducationModel) *domain.Education {
-	edu := &domain.Education{
+func mapEducationToDomain(e *db.EducationModel) *models.Education {
+	edu := &models.Education{
 		ID:        e.ID,
 		School:    e.School,
 		Degree:    e.Degree,

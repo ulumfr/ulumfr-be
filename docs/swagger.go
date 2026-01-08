@@ -663,6 +663,213 @@ const docTemplate = `{
                     "403": {"description": "Forbidden - Admin only"}
                 }
             }
+        },
+        "/v1/public/about": {
+            "get": {
+                "description": "Get active about/profile information",
+                "produces": ["application/json"],
+                "tags": ["Public"],
+                "summary": "Get about info",
+                "responses": {
+                    "200": {"description": "About info", "schema": {"$ref": "#/definitions/About"}},
+                    "404": {"description": "No active profile found"}
+                }
+            }
+        },
+        "/v1/public/blogs": {
+            "get": {
+                "description": "Get list of published blogs",
+                "produces": ["application/json"],
+                "tags": ["Public"],
+                "summary": "List blogs",
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 10},
+                    {"name": "tag_id", "in": "query", "type": "string"},
+                    {"name": "search", "in": "query", "type": "string"}
+                ],
+                "responses": {
+                    "200": {"description": "List of blogs", "schema": {"$ref": "#/definitions/BlogListResponse"}}
+                }
+            }
+        },
+        "/v1/public/blogs/{slug}": {
+            "get": {
+                "description": "Get blog by slug",
+                "produces": ["application/json"],
+                "tags": ["Public"],
+                "summary": "Get blog by slug",
+                "parameters": [{"name": "slug", "in": "path", "required": true, "type": "string"}],
+                "responses": {
+                    "200": {"description": "Blog details", "schema": {"$ref": "#/definitions/Blog"}},
+                    "404": {"description": "Blog not found"}
+                }
+            }
+        },
+        "/v1/public/certificates": {
+            "get": {
+                "description": "Get all certificates",
+                "produces": ["application/json"],
+                "tags": ["Public"],
+                "summary": "List certificates",
+                "responses": {
+                    "200": {"description": "List of certificates", "schema": {"type": "array", "items": {"$ref": "#/definitions/Certificate"}}}
+                }
+            }
+        },
+        "/v1/admin/about": {
+            "get": {
+                "security": [{"Bearer": []}],
+                "description": "Get all about entries",
+                "produces": ["application/json"],
+                "tags": ["Admin - About"],
+                "summary": "List all about entries",
+                "responses": {
+                    "200": {"description": "List of about entries", "schema": {"type": "array", "items": {"$ref": "#/definitions/About"}}}
+                }
+            },
+            "post": {
+                "security": [{"Bearer": []}],
+                "description": "Create a new about entry",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - About"],
+                "summary": "Create about",
+                "parameters": [{"description": "About data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/CreateAboutInput"}}],
+                "responses": {"201": {"description": "About created"}}
+            }
+        },
+        "/v1/admin/about/{id}": {
+            "put": {
+                "security": [{"Bearer": []}],
+                "description": "Update an about entry",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - About"],
+                "summary": "Update about",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string"},
+                    {"description": "About data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/UpdateAboutInput"}}
+                ],
+                "responses": {"200": {"description": "About updated"}}
+            },
+            "delete": {
+                "security": [{"Bearer": []}],
+                "description": "Delete an about entry",
+                "produces": ["application/json"],
+                "tags": ["Admin - About"],
+                "summary": "Delete about",
+                "parameters": [{"name": "id", "in": "path", "required": true, "type": "string"}],
+                "responses": {"200": {"description": "About deleted"}}
+            }
+        },
+        "/v1/admin/blogs": {
+            "get": {
+                "security": [{"Bearer": []}],
+                "description": "Get all blogs (including unpublished)",
+                "produces": ["application/json"],
+                "tags": ["Admin - Blogs"],
+                "summary": "List all blogs",
+                "parameters": [
+                    {"name": "page", "in": "query", "type": "integer", "default": 1},
+                    {"name": "limit", "in": "query", "type": "integer", "default": 10}
+                ],
+                "responses": {
+                    "200": {"description": "List of blogs", "schema": {"$ref": "#/definitions/BlogListResponse"}}
+                }
+            },
+            "post": {
+                "security": [{"Bearer": []}],
+                "description": "Create a new blog",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - Blogs"],
+                "summary": "Create blog",
+                "parameters": [{"description": "Blog data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/CreateBlogInput"}}],
+                "responses": {"201": {"description": "Blog created"}}
+            }
+        },
+        "/v1/admin/blogs/{id}": {
+            "get": {
+                "security": [{"Bearer": []}],
+                "description": "Get blog by ID",
+                "produces": ["application/json"],
+                "tags": ["Admin - Blogs"],
+                "summary": "Get blog by ID",
+                "parameters": [{"name": "id", "in": "path", "required": true, "type": "string"}],
+                "responses": {
+                    "200": {"description": "Blog details", "schema": {"$ref": "#/definitions/Blog"}},
+                    "404": {"description": "Not found"}
+                }
+            },
+            "put": {
+                "security": [{"Bearer": []}],
+                "description": "Update a blog",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - Blogs"],
+                "summary": "Update blog",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string"},
+                    {"description": "Blog data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/UpdateBlogInput"}}
+                ],
+                "responses": {"200": {"description": "Blog updated"}}
+            },
+            "delete": {
+                "security": [{"Bearer": []}],
+                "description": "Delete a blog",
+                "produces": ["application/json"],
+                "tags": ["Admin - Blogs"],
+                "summary": "Delete blog",
+                "parameters": [{"name": "id", "in": "path", "required": true, "type": "string"}],
+                "responses": {"200": {"description": "Blog deleted"}}
+            }
+        },
+        "/v1/admin/certificates": {
+            "get": {
+                "security": [{"Bearer": []}],
+                "description": "Get all certificates",
+                "produces": ["application/json"],
+                "tags": ["Admin - Certificates"],
+                "summary": "List all certificates",
+                "responses": {
+                    "200": {"description": "List of certificates", "schema": {"type": "array", "items": {"$ref": "#/definitions/Certificate"}}}
+                }
+            },
+            "post": {
+                "security": [{"Bearer": []}],
+                "description": "Create a new certificate",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - Certificates"],
+                "summary": "Create certificate",
+                "parameters": [{"description": "Certificate data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/CreateCertificateInput"}}],
+                "responses": {"201": {"description": "Certificate created"}}
+            }
+        },
+        "/v1/admin/certificates/{id}": {
+            "put": {
+                "security": [{"Bearer": []}],
+                "description": "Update a certificate",
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "tags": ["Admin - Certificates"],
+                "summary": "Update certificate",
+                "parameters": [
+                    {"name": "id", "in": "path", "required": true, "type": "string"},
+                    {"description": "Certificate data", "name": "body", "in": "body", "required": true, "schema": {"$ref": "#/definitions/UpdateCertificateInput"}}
+                ],
+                "responses": {"200": {"description": "Certificate updated"}}
+            },
+            "delete": {
+                "security": [{"Bearer": []}],
+                "description": "Delete a certificate",
+                "produces": ["application/json"],
+                "tags": ["Admin - Certificates"],
+                "summary": "Delete certificate",
+                "parameters": [{"name": "id", "in": "path", "required": true, "type": "string"}],
+                "responses": {"200": {"description": "Certificate deleted"}}
+            }
         }
     },
     "definitions": {
@@ -1040,6 +1247,158 @@ const docTemplate = `{
                 "total_pages": {"type": "integer"},
                 "has_next": {"type": "boolean"},
                 "has_prev": {"type": "boolean"}
+            }
+        },
+        "About": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "full_name": {"type": "string"},
+                "nickname": {"type": "string"},
+                "role": {"type": "string"},
+                "bio": {"type": "string"},
+                "avatar_url": {"type": "string"},
+                "cover_url": {"type": "string"},
+                "location": {"type": "string"},
+                "email": {"type": "string"},
+                "phone": {"type": "string"},
+                "is_active": {"type": "boolean"},
+                "created_at": {"type": "string", "format": "date-time"},
+                "updated_at": {"type": "string", "format": "date-time"}
+            }
+        },
+        "CreateAboutInput": {
+            "type": "object",
+            "required": ["full_name", "role"],
+            "properties": {
+                "full_name": {"type": "string"},
+                "nickname": {"type": "string"},
+                "role": {"type": "string"},
+                "bio": {"type": "string"},
+                "avatar_url": {"type": "string"},
+                "cover_url": {"type": "string"},
+                "location": {"type": "string"},
+                "email": {"type": "string"},
+                "phone": {"type": "string"},
+                "is_active": {"type": "boolean", "default": true}
+            }
+        },
+        "UpdateAboutInput": {
+            "type": "object",
+            "properties": {
+                "full_name": {"type": "string"},
+                "nickname": {"type": "string"},
+                "role": {"type": "string"},
+                "bio": {"type": "string"},
+                "avatar_url": {"type": "string"},
+                "cover_url": {"type": "string"},
+                "location": {"type": "string"},
+                "email": {"type": "string"},
+                "phone": {"type": "string"},
+                "is_active": {"type": "boolean"}
+            }
+        },
+        "Blog": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "title": {"type": "string"},
+                "slug": {"type": "string"},
+                "excerpt": {"type": "string"},
+                "content": {"type": "string"},
+                "cover_image": {"type": "string"},
+                "is_published": {"type": "boolean"},
+                "is_featured": {"type": "boolean"},
+                "published_at": {"type": "string", "format": "date-time"},
+                "sort_order": {"type": "integer"},
+                "tags": {"type": "array", "items": {"$ref": "#/definitions/Tag"}},
+                "created_at": {"type": "string", "format": "date-time"},
+                "updated_at": {"type": "string", "format": "date-time"}
+            }
+        },
+        "BlogListResponse": {
+            "type": "object",
+            "properties": {
+                "success": {"type": "boolean"},
+                "data": {"type": "array", "items": {"$ref": "#/definitions/Blog"}},
+                "pagination": {"$ref": "#/definitions/Pagination"}
+            }
+        },
+        "CreateBlogInput": {
+            "type": "object",
+            "required": ["title", "slug"],
+            "properties": {
+                "title": {"type": "string"},
+                "slug": {"type": "string"},
+                "excerpt": {"type": "string"},
+                "content": {"type": "string"},
+                "cover_image": {"type": "string"},
+                "is_published": {"type": "boolean"},
+                "is_featured": {"type": "boolean"},
+                "published_at": {"type": "string", "format": "date-time"},
+                "sort_order": {"type": "integer"},
+                "tag_ids": {"type": "array", "items": {"type": "string"}}
+            }
+        },
+        "UpdateBlogInput": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "slug": {"type": "string"},
+                "excerpt": {"type": "string"},
+                "content": {"type": "string"},
+                "cover_image": {"type": "string"},
+                "is_published": {"type": "boolean"},
+                "is_featured": {"type": "boolean"},
+                "published_at": {"type": "string", "format": "date-time"},
+                "sort_order": {"type": "integer"},
+                "tag_ids": {"type": "array", "items": {"type": "string"}}
+            }
+        },
+        "Certificate": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "name": {"type": "string"},
+                "issuer": {"type": "string"},
+                "issue_date": {"type": "string", "format": "date-time"},
+                "expiry_date": {"type": "string", "format": "date-time"},
+                "credential_id": {"type": "string"},
+                "credential_url": {"type": "string"},
+                "image_url": {"type": "string"},
+                "description": {"type": "string"},
+                "sort_order": {"type": "integer"},
+                "created_at": {"type": "string", "format": "date-time"},
+                "updated_at": {"type": "string", "format": "date-time"}
+            }
+        },
+        "CreateCertificateInput": {
+            "type": "object",
+            "required": ["name", "issuer", "issue_date"],
+            "properties": {
+                "name": {"type": "string"},
+                "issuer": {"type": "string"},
+                "issue_date": {"type": "string", "format": "date-time"},
+                "expiry_date": {"type": "string", "format": "date-time"},
+                "credential_id": {"type": "string"},
+                "credential_url": {"type": "string"},
+                "image_url": {"type": "string"},
+                "description": {"type": "string"},
+                "sort_order": {"type": "integer"}
+            }
+        },
+        "UpdateCertificateInput": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "issuer": {"type": "string"},
+                "issue_date": {"type": "string", "format": "date-time"},
+                "expiry_date": {"type": "string", "format": "date-time"},
+                "credential_id": {"type": "string"},
+                "credential_url": {"type": "string"},
+                "image_url": {"type": "string"},
+                "description": {"type": "string"},
+                "sort_order": {"type": "integer"}
             }
         }
     },

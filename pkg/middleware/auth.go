@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/ulumfr/ulumfr-be/pkg/config"
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
 )
 
@@ -38,31 +38,31 @@ func (m *AuthMiddleware) RequireAuth() fiber.Handler {
 		// Extract token from Authorization header
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Authorization header required"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Authorization header required"))
 		}
 
 		// Check Bearer prefix
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid authorization format"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid authorization format"))
 		}
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Token required"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Token required"))
 		}
 
 		// Parse and validate token
 		claims, err := m.validateToken(tokenString)
 		if err != nil {
 			log.Debug().Err(err).Msg("Token validation failed")
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Invalid or expired token"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Invalid or expired token"))
 		}
 
 		// Get user from database
 		user, err := m.userRepo.FindByID(c.Context(), claims.UserID)
 		if err != nil {
 			log.Debug().Err(err).Str("user_id", claims.UserID).Msg("User not found")
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("User not found"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("User not found"))
 		}
 
 		// Store user in context (without password)
@@ -76,9 +76,9 @@ func (m *AuthMiddleware) RequireAuth() fiber.Handler {
 // RequireAdmin requires the user to have admin role
 func (m *AuthMiddleware) RequireAdmin() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		user, ok := c.Locals(UserContextKey).(*domain.User)
+		user, ok := c.Locals(UserContextKey).(*models.User)
 		if !ok || user == nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(domain.ErrorResponse("Authentication required"))
+			return c.Status(fiber.StatusUnauthorized).JSON(models.ErrorResponse("Authentication required"))
 		}
 
 		if !user.IsAdmin() {
@@ -86,7 +86,7 @@ func (m *AuthMiddleware) RequireAdmin() fiber.Handler {
 				Str("user_id", user.ID).
 				Str("role", user.Role).
 				Msg("User is not admin")
-			return c.Status(fiber.StatusForbidden).JSON(domain.ErrorResponse("Admin access required"))
+			return c.Status(fiber.StatusForbidden).JSON(models.ErrorResponse("Admin access required"))
 		}
 
 		return c.Next()
@@ -124,8 +124,8 @@ func (m *AuthMiddleware) OptionalAuth() fiber.Handler {
 }
 
 // validateToken validates a JWT token and returns its claims
-func (m *AuthMiddleware) validateToken(tokenString string) (*domain.JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &domain.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (m *AuthMiddleware) validateToken(tokenString string) (*models.JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -136,7 +136,7 @@ func (m *AuthMiddleware) validateToken(tokenString string) (*domain.JWTClaims, e
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*domain.JWTClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*models.JWTClaims); ok && token.Valid {
 		return claims, nil
 	}
 
@@ -144,7 +144,7 @@ func (m *AuthMiddleware) validateToken(tokenString string) (*domain.JWTClaims, e
 }
 
 // GetUserFromContext gets the user from the Fiber context
-func GetUserFromContext(c *fiber.Ctx) (*domain.User, bool) {
-	user, ok := c.Locals(UserContextKey).(*domain.User)
+func GetUserFromContext(c *fiber.Ctx) (*models.User, bool) {
+	user, ok := c.Locals(UserContextKey).(*models.User)
 	return user, ok
 }

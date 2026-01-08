@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewUserRepository(client *db.PrismaClient) UserRepository {
 	return &userRepository{client: client}
 }
 
-func (r *userRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+func (r *userRepository) FindByID(ctx context.Context, id string) (*models.User, error) {
 	user, err := r.client.User.FindUnique(
 		db.User.ID.Equals(id),
 	).Exec(ctx)
@@ -28,7 +28,7 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (*domain.User,
 	return mapUserToDomain(user), nil
 }
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
 	user, err := r.client.User.FindUnique(
 		db.User.Email.Equals(email),
 	).Exec(ctx)
@@ -40,7 +40,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 	return mapUserToDomain(user), nil
 }
 
-func (r *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
+func (r *userRepository) FindAll(ctx context.Context) ([]models.User, error) {
 	users, err := r.client.User.FindMany().
 		OrderBy(db.User.CreatedAt.Order(db.DESC)).
 		Exec(ctx)
@@ -49,7 +49,7 @@ func (r *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
 		return nil, err
 	}
 
-	result := make([]domain.User, len(users))
+	result := make([]models.User, len(users))
 	for i, u := range users {
 		result[i] = *mapUserToDomain(&u)
 	}
@@ -57,7 +57,7 @@ func (r *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
 	return result, nil
 }
 
-func (r *userRepository) Create(ctx context.Context, name, email, password string) (*domain.User, error) {
+func (r *userRepository) Create(ctx context.Context, name, email, password string) (*models.User, error) {
 	user, err := r.client.User.CreateOne(
 		db.User.Email.Set(email),
 		db.User.Name.Set(name),
@@ -71,7 +71,7 @@ func (r *userRepository) Create(ctx context.Context, name, email, password strin
 	return mapUserToDomain(user), nil
 }
 
-func (r *userRepository) Update(ctx context.Context, id string, input domain.UpdateProfileInput) (*domain.User, error) {
+func (r *userRepository) Update(ctx context.Context, id string, input models.UpdateProfileInput) (*models.User, error) {
 	updates := []db.UserSetParam{}
 
 	if input.Name != nil {
@@ -104,8 +104,8 @@ func (r *userRepository) Update(ctx context.Context, id string, input domain.Upd
 	return mapUserToDomain(user), nil
 }
 
-func mapUserToDomain(u *db.UserModel) *domain.User {
-	user := &domain.User{
+func mapUserToDomain(u *db.UserModel) *models.User {
+	user := &models.User{
 		ID:        u.ID,
 		Email:     u.Email,
 		Role:      string(u.Role),

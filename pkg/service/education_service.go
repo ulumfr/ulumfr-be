@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/pkg/repository"
 	"github.com/ulumfr/ulumfr-be/pkg/storage"
 )
@@ -31,10 +31,10 @@ func (s *EducationService) List(c *fiber.Ctx) error {
 	educations, err := s.repo.FindAll(c.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch educations")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to fetch educations"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to fetch educations"))
 	}
 
-	return c.JSON(domain.SuccessResponse(educations, ""))
+	return c.JSON(models.SuccessResponse(educations, ""))
 }
 
 // AdminList returns all educations (admin endpoint)
@@ -44,38 +44,38 @@ func (s *EducationService) AdminList(c *fiber.Ctx) error {
 
 // Create creates a new education entry
 func (s *EducationService) Create(c *fiber.Ctx) error {
-	var input domain.CreateEducationInput
+	var input models.CreateEducationInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	education, err := s.repo.Create(c.Context(), input)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create education")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to create education"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to create education"))
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(domain.SuccessResponse(education, "Education created successfully"))
+	return c.Status(fiber.StatusCreated).JSON(models.SuccessResponse(education, "Education created successfully"))
 }
 
 // Update updates an education entry
 func (s *EducationService) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("ID is required"))
 	}
 
-	var input domain.UpdateEducationInput
+	var input models.UpdateEducationInput
 	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("Invalid request body"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("Invalid request body"))
 	}
 
 	if err := s.validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse(err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse(err.Error()))
 	}
 
 	// If updating logoUrl, delete old logo from R2
@@ -94,24 +94,24 @@ func (s *EducationService) Update(c *fiber.Ctx) error {
 	education, err := s.repo.Update(c.Context(), id, input)
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to update education")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to update education"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to update education"))
 	}
 
-	return c.JSON(domain.SuccessResponse(education, "Education updated successfully"))
+	return c.JSON(models.SuccessResponse(education, "Education updated successfully"))
 }
 
 // Delete deletes an education entry and its logo from R2
 func (s *EducationService) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(domain.ErrorResponse("ID is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(models.ErrorResponse("ID is required"))
 	}
 
 	// Fetch education to get logoUrl for R2 cleanup
 	education, err := s.repo.FindByID(c.Context(), id)
 	if err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Education not found")
-		return c.Status(fiber.StatusNotFound).JSON(domain.ErrorResponse("Education not found"))
+		return c.Status(fiber.StatusNotFound).JSON(models.ErrorResponse("Education not found"))
 	}
 
 	// Delete logo from R2 if exists
@@ -126,8 +126,8 @@ func (s *EducationService) Delete(c *fiber.Ctx) error {
 
 	if err := s.repo.Delete(c.Context(), id); err != nil {
 		log.Error().Err(err).Str("id", id).Msg("Failed to delete education")
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.ErrorResponse("Failed to delete education"))
+		return c.Status(fiber.StatusInternalServerError).JSON(models.ErrorResponse("Failed to delete education"))
 	}
 
-	return c.JSON(domain.SuccessResponse(nil, "Education deleted successfully"))
+	return c.JSON(models.SuccessResponse(nil, "Education deleted successfully"))
 }

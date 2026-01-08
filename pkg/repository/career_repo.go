@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewCareerRepository(client *db.PrismaClient) CareerRepository {
 	return &careerRepository{client: client}
 }
 
-func (r *careerRepository) FindAll(ctx context.Context) ([]domain.Career, error) {
+func (r *careerRepository) FindAll(ctx context.Context) ([]models.Career, error) {
 	careers, err := r.client.Career.FindMany().
 		OrderBy(db.Career.SortOrder.Order(db.ASC), db.Career.StartDate.Order(db.DESC)).
 		Exec(ctx)
@@ -25,7 +25,7 @@ func (r *careerRepository) FindAll(ctx context.Context) ([]domain.Career, error)
 		return nil, err
 	}
 
-	result := make([]domain.Career, len(careers))
+	result := make([]models.Career, len(careers))
 	for i, c := range careers {
 		result[i] = *mapCareerToDomain(&c)
 	}
@@ -33,7 +33,7 @@ func (r *careerRepository) FindAll(ctx context.Context) ([]domain.Career, error)
 	return result, nil
 }
 
-func (r *careerRepository) FindByID(ctx context.Context, id string) (*domain.Career, error) {
+func (r *careerRepository) FindByID(ctx context.Context, id string) (*models.Career, error) {
 	career, err := r.client.Career.FindUnique(
 		db.Career.ID.Equals(id),
 	).Exec(ctx)
@@ -45,7 +45,7 @@ func (r *careerRepository) FindByID(ctx context.Context, id string) (*domain.Car
 	return mapCareerToDomain(career), nil
 }
 
-func (r *careerRepository) Create(ctx context.Context, input domain.CreateCareerInput) (*domain.Career, error) {
+func (r *careerRepository) Create(ctx context.Context, input models.CreateCareerInput) (*models.Career, error) {
 	career, err := r.client.Career.CreateOne(
 		db.Career.Company.Set(input.Company),
 		db.Career.Position.Set(input.Position),
@@ -66,7 +66,7 @@ func (r *careerRepository) Create(ctx context.Context, input domain.CreateCareer
 	return mapCareerToDomain(career), nil
 }
 
-func (r *careerRepository) Update(ctx context.Context, id string, input domain.UpdateCareerInput) (*domain.Career, error) {
+func (r *careerRepository) Update(ctx context.Context, id string, input models.UpdateCareerInput) (*models.Career, error) {
 	updates := []db.CareerSetParam{}
 
 	if input.Company != nil {
@@ -118,8 +118,8 @@ func (r *careerRepository) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func mapCareerToDomain(c *db.CareerModel) *domain.Career {
-	career := &domain.Career{
+func mapCareerToDomain(c *db.CareerModel) *models.Career {
+	career := &models.Career{
 		ID:        c.ID,
 		Company:   c.Company,
 		Position:  c.Position,

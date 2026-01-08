@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/ulumfr/ulumfr-be/pkg/domain"
+	"github.com/ulumfr/ulumfr-be/pkg/models"
 	"github.com/ulumfr/ulumfr-be/prisma/db"
 )
 
@@ -16,7 +16,7 @@ func NewTagRepository(client *db.PrismaClient) TagRepository {
 	return &tagRepository{client: client}
 }
 
-func (r *tagRepository) FindAll(ctx context.Context) ([]domain.Tag, error) {
+func (r *tagRepository) FindAll(ctx context.Context) ([]models.Tag, error) {
 	tags, err := r.client.Tag.FindMany().
 		OrderBy(db.Tag.Name.Order(db.ASC)).
 		Exec(ctx)
@@ -25,9 +25,9 @@ func (r *tagRepository) FindAll(ctx context.Context) ([]domain.Tag, error) {
 		return nil, err
 	}
 
-	result := make([]domain.Tag, len(tags))
+	result := make([]models.Tag, len(tags))
 	for i, t := range tags {
-		tag := domain.Tag{
+		tag := models.Tag{
 			ID:        t.ID,
 			Name:      t.Name,
 			Slug:      t.Slug,
@@ -43,7 +43,7 @@ func (r *tagRepository) FindAll(ctx context.Context) ([]domain.Tag, error) {
 	return result, nil
 }
 
-func (r *tagRepository) FindByID(ctx context.Context, id string) (*domain.Tag, error) {
+func (r *tagRepository) FindByID(ctx context.Context, id string) (*models.Tag, error) {
 	tag, err := r.client.Tag.FindUnique(
 		db.Tag.ID.Equals(id),
 	).Exec(ctx)
@@ -52,7 +52,7 @@ func (r *tagRepository) FindByID(ctx context.Context, id string) (*domain.Tag, e
 		return nil, err
 	}
 
-	result := &domain.Tag{
+	result := &models.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
@@ -66,7 +66,7 @@ func (r *tagRepository) FindByID(ctx context.Context, id string) (*domain.Tag, e
 	return result, nil
 }
 
-func (r *tagRepository) Create(ctx context.Context, input domain.CreateTagInput) (*domain.Tag, error) {
+func (r *tagRepository) Create(ctx context.Context, input models.CreateTagInput) (*models.Tag, error) {
 	tag, err := r.client.Tag.CreateOne(
 		db.Tag.Name.Set(input.Name),
 		db.Tag.Slug.Set(input.Slug),
@@ -77,7 +77,7 @@ func (r *tagRepository) Create(ctx context.Context, input domain.CreateTagInput)
 		return nil, err
 	}
 
-	result := &domain.Tag{
+	result := &models.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
@@ -91,7 +91,7 @@ func (r *tagRepository) Create(ctx context.Context, input domain.CreateTagInput)
 	return result, nil
 }
 
-func (r *tagRepository) Update(ctx context.Context, id string, input domain.UpdateTagInput) (*domain.Tag, error) {
+func (r *tagRepository) Update(ctx context.Context, id string, input models.UpdateTagInput) (*models.Tag, error) {
 	updates := []db.TagSetParam{}
 
 	if input.Name != nil {
@@ -112,7 +112,7 @@ func (r *tagRepository) Update(ctx context.Context, id string, input domain.Upda
 		return nil, err
 	}
 
-	result := &domain.Tag{
+	result := &models.Tag{
 		ID:        tag.ID,
 		Name:      tag.Name,
 		Slug:      tag.Slug,
