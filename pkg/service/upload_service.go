@@ -46,6 +46,7 @@ func (s *UploadService) GetPresignedURL(c *fiber.Ctx) error {
 		"educations": true,
 		"general":    true,
 		"profiles":   true,
+		"about":      true,
 	}
 
 	if req.Folder == "" {

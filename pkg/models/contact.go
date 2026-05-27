@@ -30,7 +30,7 @@ type CreateContactInput struct {
 	Name    string  `json:"name" validate:"required,min=1,max=100"`
 	Email   string  `json:"email" validate:"required,email"`
 	Subject *string `json:"subject" validate:"omitempty,max=255"`
-	Message string  `json:"message" validate:"required,min=10,max=5000"`
+	Message string  `json:"message" validate:"required,max=5000"`
 }
 
 // CreateResumeInput is the input for creating a resume entry
