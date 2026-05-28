@@ -40,13 +40,14 @@ func (s *UploadService) GetPresignedURL(c *fiber.Ctx) error {
 
 	// Validate folder
 	allowedFolders := map[string]bool{
-		"projects":   true,
-		"resumes":    true,
-		"careers":    true,
-		"educations": true,
-		"general":    true,
-		"profiles":   true,
-		"about":      true,
+		"projects":     true,
+		"resumes":      true,
+		"careers":      true,
+		"educations":   true,
+		"general":      true,
+		"profiles":     true,
+		"about":        true,
+		"certificates": true,
 	}
 
 	if req.Folder == "" {
